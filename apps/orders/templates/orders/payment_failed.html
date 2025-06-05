@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Failed - Georgian Equipment</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .failed-icon {
+            font-size: 4rem;
+            color: #dc3545;
+            margin-bottom: 2rem;
+        }
+        .order-details {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 2rem;
+        }
+        .error-message {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .payment-options {
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="{% url 'home' %}">Georgian Equipment</a>
+            <div class="d-flex">
+                <a href="{% url 'cart:cart_detail' %}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-shopping-cart"></i> Cart
+                </a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'cart:wishlist_detail' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-heart"></i> Wishlist
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Failed Message -->
+                <div class="text-center mb-5">
+                    <i class="fas fa-times-circle failed-icon"></i>
+                    <h1 class="h2 mb-3">Payment Failed</h1>
+                    <p class="lead text-muted">Unfortunately, we couldn't process your payment. Please try again.</p>
+                </div>
+
+                <!-- Error Details -->
+                <div class="error-message">
+                    <h5 class="text-danger mb-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>What happened?
+                    </h5>
+                    {% if error_message %}
+                    <p class="mb-3">{{ error_message }}</p>
+                    {% else %}
+                    <p class="mb-3">Your payment could not be processed. This could be due to:</p>
+                    <ul class="mb-0">
+                        <li>Insufficient funds in your account</li>
+                        <li>Your card was declined by the bank</li>
+                        <li>Incorrect card information</li>
+                        <li>Network or technical issues</li>
+                    </ul>
+                    {% endif %}
+                </div>
+
+                <!-- Order Information -->
+                {% if order %}
+                <div class="order-details">
+                    <h5 class="mb-3">Your Order Information</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Order Number:</strong> #{{ order.order_number }}</p>
+                            <p><strong>Order Date:</strong> {{ order.created_at|date:"F d, Y" }}</p>
+                            <p><strong>Payment Status:</strong> 
+                                <span class="badge bg-danger">Failed</span>
+                            </p>
+                            <p><strong>Order Status:</strong> 
+                                <span class="badge bg-warning">Pending Payment</span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Total Amount:</strong> <span class="h5 text-primary">{{ order.total_amount }} ₾</span></p>
+                            <p><strong>Email:</strong> {{ order.email }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Items Summary -->
+                <div class="payment-options">
+                    <h6 class="mb-3">Items in Your Order:</h6>
+                    {% for item in order.items.all %}
+                    <div class="d-flex justify-content-between align-items-center py-2 {% if not forloop.last %}border-bottom{% endif %}">
+                        <div>
+                            <strong>{{ item.product_name }}</strong>
+                            <br><small class="text-muted">Qty: {{ item.quantity }} × {{ item.price }} ₾</small>
+                        </div>
+                        <div>
+                            <strong>{{ item.total_price }} ₾</strong>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    <div class="d-flex justify-content-between align-items-center pt-3 mt-3 border-top">
+                        <strong>Total:</strong>
+                        <strong class="h5 text-primary">{{ order.total_amount }} ₾</strong>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- What to do next -->
+                <div class="payment-options">
+                    <h5 class="mb-3">
+                        <i class="fas fa-lightbulb me-2"></i>What can you do next?
+                    </h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-redo fa-2x text-primary mb-3"></i>
+                                    <h6>Try Payment Again</h6>
+                                    <p class="text-muted small">Use a different card or check your card details</p>
+                                    {% if order %}
+                                    <a href="{% url 'orders:payment' order.id %}" class="btn btn-primary">
+                                        <i class="fas fa-credit-card me-2"></i>Retry Payment
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-phone fa-2x text-success mb-3"></i>
+                                    <h6>Contact Your Bank</h6>
+                                    <p class="text-muted small">Check if your card has any restrictions</p>
+                                    <small class="text-muted">Call the number on the back of your card</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alternative Payment Methods -->
+                <div class="payment-options">
+                    <h6 class="mb-3">
+                        <i class="fas fa-money-bill-wave me-2"></i>Alternative Payment Options
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3">
+                            <i class="fas fa-university fa-2x text-info mb-2"></i>
+                            <h6>Bank Transfer</h6>
+                            <small class="text-muted">Direct bank transfer available</small>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <i class="fas fa-money-bill-alt fa-2x text-success mb-2"></i>
+                            <h6>Cash on Delivery</h6>
+                            <small class="text-muted">Pay when you receive your order</small>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <i class="fas fa-credit-card fa-2x text-warning mb-2"></i>
+                            <h6>Different Card</h6>
+                            <small class="text-muted">Try with another credit/debit card</small>
+                        </div>
+                    </div>
+                    <div class="text-center mt-3">
+                        <small class="text-muted">Contact us for alternative payment arrangements</small>
+                    </div>
+                </div>
+
+                <!-- Test Cards Info -->
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle me-2"></i>For Testing Purposes</h6>
+                    <p class="mb-2">If you're testing the system, use these cards:</p>
+                    <ul class="mb-0">
+                        <li><strong>4111 1111 1111 1111</strong> - Successful payment</li>
+                        <li><strong>4000 0000 0000 0002</strong> - Declined payment (triggers this page)</li>
+                    </ul>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="text-center mt-5">
+                    {% if order %}
+                    <a href="{% url 'orders:payment' order.id %}" class="btn btn-primary btn-lg me-3">
+                        <i class="fas fa-redo me-2"></i>Try Payment Again
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'cart:cart_detail' %}" class="btn btn-outline-secondary me-3">
+                        <i class="fas fa-shopping-cart me-2"></i>Back to Cart
+                    </a>
+                    <a href="{% url 'products:product_list' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-shopping-bag me-2"></i>Continue Shopping
+                    </a>
+                </div>
+
+                <!-- Support Information -->
+                <div class="text-center mt-4 mb-5">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6><i class="fas fa-headset me-2"></i>Need Help?</h6>
+                            <p class="mb-2">Our customer support team is here to help</p>
+                            <p class="mb-0">
+                                <a href="mailto:support@georgianequipment.ge" class="btn btn-outline-primary btn-sm me-2">
+                                    <i class="fas fa-envelope me-1"></i>Email Support
+                                </a>
+                                <a href="tel:+995123456789" class="btn btn-outline-success btn-sm">
+                                    <i class="fas fa-phone me-1"></i>Call Us
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

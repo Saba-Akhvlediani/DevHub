@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results{% if query %} for "{{ query }}"{% endif %} - Georgian Equipment</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .product-card {
+            transition: transform 0.3s;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            height: 100%;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        .product-image {
+            height: 200px;
+            object-fit: cover;
+        }
+        .search-header {
+            background: #f8f9fa;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .price-tag {
+            background: #007bff;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        .search-highlight {
+            background-color: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="{% url 'home' %}">Georgian Equipment</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'home' %}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'products:product_list' %}">All Products</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <form class="d-flex" method="GET" action="{% url 'products:product_search' %}">
+                        <input class="form-control me-2" type="search" name="q" placeholder="Search products..." value="{{ query }}" required>
+                        <button class="btn btn-outline-primary" type="submit">Search</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Search Header -->
+    <div class="search-header">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8">
+                    {% if query %}
+                    <h1 class="h2 mb-3">Search Results for "{{ query }}"</h1>
+                    <p class="text-muted">{{ products|length }} product{{ products|length|pluralize }} found</p>
+                    {% else %}
+                    <h1 class="h2 mb-3">Search Products</h1>
+                    <p class="text-muted">Enter a search term to find products</p>
+                    {% endif %}
+                </div>
+                <div class="col-lg-4">
+                    <!-- Advanced search form -->
+                    <form method="GET" action="{% url 'products:product_search' %}" class="bg-white p-3 rounded shadow-sm">
+                        <h6 class="mb-3">Refine Search</h6>
+                        <div class="mb-3">
+                            <input type="text" class="form-control" name="q" placeholder="Search products..." value="{{ query }}">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Search</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Results -->
+    <div class="container">
+        {% if query %}
+            {% if products %}
+            <div class="row">
+                {% for product in products %}
+                <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
+                    <div class="card product-card">
+                        {% if product.get_main_image %}
+                        <img src="{{ product.get_main_image.url }}" class="card-img-top product-image" alt="{{ product.name }}">
+                        {% else %}
+                        <div class="card-img-top product-image bg-light d-flex align-items-center justify-content-center">
+                            <span class="text-muted">No Image</span>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="card-title">{{ product.name }}</h6>
+                            <p class="text-muted small mb-2">Model: {{ product.model_number }}</p>
+                            <p class="text-muted small mb-2">Category: {{ product.category.name }}</p>
+                            
+                            {% if product.short_description %}
+                            <p class="card-text text-muted small">{{ product.short_description|truncatewords:12 }}</p>
+                            {% endif %}
+                            
+                            <!-- Quick specs that might match search -->
+                            {% if product.power or product.voltage %}
+                            <div class="mb-2">
+                                {% if product.power %}<small class="text-muted d-block">Power: {{ product.power }}</small>{% endif %}
+                                {% if product.voltage %}<small class="text-muted d-block">Voltage: {{ product.voltage }}</small>{% endif %}
+                            </div>
+                            {% endif %}
+                            
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="price-tag">{{ product.formatted_price }}</span>
+                                    {% if product.is_available %}
+                                    <span class="badge bg-success">In Stock</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Out of Stock</span>
+                                    {% endif %}
+                                </div>
+                                <a href="{% url 'products:product_detail' product.slug %}" class="btn btn-primary w-100">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Search results pagination" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?q={{ query }}&page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?q={{ query }}&page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?q={{ query }}&page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            {% else %}
+            <!-- No Results Found -->
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-search fa-3x text-muted"></i>
+                </div>
+                <h4 class="text-muted">No products found for "{{ query }}"</h4>
+                <p class="text-muted mb-4">Try searching with different keywords or check your spelling</p>
+                
+                <div class="mb-4">
+                    <h6>Search suggestions:</h6>
+                    <ul class="list-unstyled">
+                        <li>• Try searching for "industrial fan" or "heat gun"</li>
+                        <li>• Use model numbers like "1101" or "1102"</li>
+                        <li>• Search by specifications like "2000W" or "220V"</li>
+                    </ul>
+                </div>
+                
+                <a href="{% url 'products:product_list' %}" class="btn btn-primary">Browse All Products</a>
+            </div>
+            {% endif %}
+        {% else %}
+        <!-- No Search Query -->
+        <div class="text-center py-5">
+            <h4 class="text-muted">Enter a search term to find products</h4>
+            <p class="text-muted">Search by product name, model number, or specifications</p>
+            
+            <div class="row justify-content-center mt-4">
+                <div class="col-md-6">
+                    <form method="GET" action="{% url 'products:product_search' %}">
+                        <div class="input-group">
+                            <input type="text" class="form-control form-control-lg" name="q" placeholder="Search for industrial equipment..." required>
+                            <button class="btn btn-primary" type="submit">Search</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <a href="{% url 'products:product_list' %}" class="btn btn-outline-primary">Browse All Products</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

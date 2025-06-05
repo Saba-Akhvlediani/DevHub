@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart - Georgian Equipment</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .cart-item {
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: box-shadow 0.3s;
+        }
+        .cart-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .product-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .quantity-input {
+            width: 80px;
+        }
+        .cart-summary {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 2rem;
+            position: sticky;
+            top: 20px;
+        }
+        .total-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="{% url 'home' %}">Georgian Equipment</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'home' %}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'products:product_list' %}">All Products</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <a href="{% url 'cart:cart_detail' %}" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-shopping-cart"></i> Cart ({{ cart.total_items }})
+                    </a>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'cart:wishlist_detail' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-heart"></i> Wishlist
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Cart Content -->
+    <div class="container mt-4">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                <li class="breadcrumb-item active">Shopping Cart</li>
+            </ol>
+        </nav>
+
+        <h2 class="mb-4">
+            <i class="fas fa-shopping-cart me-2"></i>Your Shopping Cart
+        </h2>
+
+        {% if cart_items %}
+        <div class="row">
+            <!-- Cart Items -->
+            <div class="col-lg-8">
+                {% for item in cart_items %}
+                <div class="cart-item">
+                    <div class="row align-items-center">
+                        <!-- Product Image -->
+                        <div class="col-md-2">
+                            {% if item.product.get_main_image %}
+                            <img src="{{ item.product.get_main_image.url }}" class="product-image" alt="{{ item.product.name }}">
+                            {% else %}
+                            <div class="product-image bg-light d-flex align-items-center justify-content-center">
+                                <i class="fas fa-image text-muted"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Product Info -->
+                        <div class="col-md-4">
+                            <h6 class="mb-1">
+                                <a href="{% url 'products:product_detail' item.product.slug %}" class="text-decoration-none">
+                                    {{ item.product.name }}
+                                </a>
+                            </h6>
+                            <p class="text-muted small mb-1">Model: {{ item.product.model_number }}</p>
+                            <p class="text-muted small mb-0">Price: {{ item.product.formatted_price }}</p>
+                        </div>
+
+                        <!-- Quantity Controls -->
+                        <div class="col-md-3">
+                            <form method="POST" action="{% url 'cart:update_cart_item' item.id %}" class="d-flex align-items-center">
+                                {% csrf_token %}
+                                <button type="button" class="btn btn-outline-secondary btn-sm me-2 quantity-btn" data-action="decrease" data-item-id="{{ item.id }}">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.stock_quantity }}" class="form-control quantity-input text-center">
+                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2 quantity-btn" data-action="increase" data-item-id="{{ item.id }}">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Total Price and Remove -->
+                        <div class="col-md-3 text-end">
+                            <p class="fw-bold mb-2">{{ item.total_price }} ₾</p>
+                            <form method="POST" action="{% url 'cart:remove_from_cart' item.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Remove this item from cart?')">
+                                    <i class="fas fa-trash"></i> Remove
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- Clear Cart Button -->
+                <div class="text-end mt-3">
+                    <form method="POST" action="{% url 'cart:clear_cart' %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Clear entire cart?')">
+                            <i class="fas fa-trash-alt"></i> Clear Cart
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Cart Summary -->
+            <div class="col-lg-4">
+                <div class="cart-summary">
+                    <h5 class="mb-3">Order Summary</h5>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Items ({{ cart.total_items }}):</span>
+                        <span>{{ cart.total_price }} ₾</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Shipping:</span>
+                        <span>Free</span>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="fw-bold">Total:</span>
+                        <span class="total-price">{{ cart.total_price }} ₾</span>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'orders:checkout' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-credit-card me-2"></i>Proceed to Checkout
+                        </a>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Please <a href="{% url 'accounts:login' %}?next={% url 'orders:checkout' %}" class="alert-link">login</a> to proceed with checkout.
+                        </div>
+                        <a href="{% url 'accounts:login' %}?next={% url 'orders:checkout' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login to Checkout
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'products:product_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Continue Shopping
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <!-- Empty Cart -->
+        <div class="text-center py-5">
+            <i class="fas fa-shopping-cart fa-4x text-muted mb-4"></i>
+            <h4 class="text-muted mb-3">Your cart is empty</h4>
+            <p class="text-muted mb-4">Add some products to your cart to see them here.</p>
+            <a href="{% url 'products:product_list' %}" class="btn btn-primary">
+                <i class="fas fa-shopping-bag me-2"></i>Start Shopping
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Quantity button handlers
+        document.querySelectorAll('.quantity-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const action = this.dataset.action;
+                const input = this.closest('.d-flex').querySelector('input[name="quantity"]');
+                const form = this.closest('form');
+                let currentValue = parseInt(input.value);
+                
+                if (action === 'increase') {
+                    if (currentValue < parseInt(input.max)) {
+                        input.value = currentValue + 1;
+                        form.submit();
+                    }
+                } else if (action === 'decrease') {
+                    if (currentValue > 1) {
+                        input.value = currentValue - 1;
+                        form.submit();
+                    }
+                }
+            });
+        });
+
+        // Auto-submit on quantity input change
+        document.querySelectorAll('input[name="quantity"]').forEach(input => {
+            input.addEventListener('change', function() {
+                if (this.value > 0) {
+                    this.closest('form').submit();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

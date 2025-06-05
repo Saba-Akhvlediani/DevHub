@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Successful - Georgian Equipment</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .success-icon {
+            font-size: 4rem;
+            color: #28a745;
+            margin-bottom: 2rem;
+        }
+        .order-details {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 2rem;
+        }
+        .order-summary {
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="{% url 'home' %}">Georgian Equipment</a>
+            <div class="d-flex">
+                <a href="{% url 'cart:cart_detail' %}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-shopping-cart"></i> Cart
+                </a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'cart:wishlist_detail' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-heart"></i> Wishlist
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Success Message -->
+                <div class="text-center mb-5">
+                    <i class="fas fa-check-circle success-icon"></i>
+                    <h1 class="h2 mb-3">Order Placed Successfully!</h1>
+                    <p class="lead text-muted">Thank you for your purchase. Your order has been received and is being processed.</p>
+                </div>
+
+                <!-- Order Details -->
+                <div class="order-details">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Order Information</h5>
+                            <p><strong>Order Number:</strong> #{{ order.order_number }}</p>
+                            <p><strong>Order Date:</strong> {{ order.created_at|date:"F d, Y" }}</p>
+                            <p><strong>Payment Status:</strong> 
+                                {% if order.payment_status == 'completed' %}
+                                    <span class="badge bg-success">Paid</span>
+                                {% else %}
+                                    <span class="badge bg-warning">{{ order.get_payment_status_display }}</span>
+                                {% endif %}
+                            </p>
+                            <p><strong>Order Status:</strong> 
+                                <span class="badge bg-info">{{ order.get_order_status_display }}</span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Contact Information</h5>
+                            <p><strong>Email:</strong> {{ order.email }}</p>
+                            <p><strong>Phone:</strong> {{ order.billing_phone }}</p>
+                            
+                            <h6 class="mt-3">Billing Address</h6>
+                            <p>
+                                {{ order.full_billing_name }}<br>
+                                {{ order.billing_address }}<br>
+                                {{ order.billing_city }}, {{ order.billing_postal_code }}<br>
+                                {{ order.billing_country }}
+                            </p>
+                            
+                            {% if order.different_shipping %}
+                            <h6 class="mt-3">Shipping Address</h6>
+                            <p>
+                                {{ order.full_shipping_name }}<br>
+                                {{ order.shipping_address_display }}
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Items -->
+                <div class="order-summary">
+                    <h5 class="mb-3">Order Items</h5>
+                    
+                    {% for item in order.items.all %}
+                    <div class="row align-items-center py-2 {% if not forloop.last %}border-bottom{% endif %}">
+                        <div class="col-md-6">
+                            <h6 class="mb-1">{{ item.product_name }}</h6>
+                            <small class="text-muted">Model: {{ item.product_model }}</small>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <span class="badge bg-light text-dark">Qty: {{ item.quantity }}</span>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <span>{{ item.price }} ₾</span>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <strong>{{ item.total_price }} ₾</strong>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    <div class="row mt-3 pt-3 border-top">
+                        <div class="col-md-8">
+                            <div class="row">
+                                <div class="col-6"><strong>Subtotal:</strong></div>
+                                <div class="col-6 text-end">{{ order.subtotal }} ₾</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6"><strong>Shipping:</strong></div>
+                                <div class="col-6 text-end">{% if order.shipping_cost > 0 %}{{ order.shipping_cost }} ₾{% else %}Free{% endif %}</div>
+                            </div>
+                            {% if order.tax_amount > 0 %}
+                            <div class="row">
+                                <div class="col-6"><strong>Tax:</strong></div>
+                                <div class="col-6 text-end">{{ order.tax_amount }} ₾</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-primary text-white p-3 rounded text-center">
+                                <div><strong>Total Paid</strong></div>
+                                <div class="h4 mb-0">{{ order.total_amount }} ₾</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- What's Next -->
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <i class="fas fa-envelope fa-2x text-primary mb-3"></i>
+                                <h6>Confirmation Email</h6>
+                                <p class="text-muted">A confirmation email has been sent to {{ order.email }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <i class="fas fa-truck fa-2x text-success mb-3"></i>
+                                <h6>Shipping Information</h6>
+                                <p class="text-muted">You'll receive shipping updates via email once your order is shipped.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Notes -->
+                {% if order.order_notes %}
+                <div class="alert alert-info mt-4">
+                    <h6><i class="fas fa-comment me-2"></i>Order Notes</h6>
+                    <p class="mb-0">{{ order.order_notes }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Action Buttons -->
+                <div class="text-center mt-5">
+                    <a href="{% url 'products:product_list' %}" class="btn btn-primary me-3">
+                        <i class="fas fa-shopping-bag me-2"></i>Continue Shopping
+                    </a>
+                    <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-home me-2"></i>Back to Home
+                    </a>
+                </div>
+
+                <!-- Support Information -->
+                <div class="text-center mt-4 mb-5">
+                    <p class="text-muted">
+                        <i class="fas fa-question-circle me-2"></i>
+                        Need help with your order? Contact us at 
+                        <a href="mailto:support@georgianequipment.ge">support@georgianequipment.ge</a> 
+                        or call <a href="tel:+995123456789">+995 123 456 789</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

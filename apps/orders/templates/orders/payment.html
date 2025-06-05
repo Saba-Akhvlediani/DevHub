@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment - Georgian Equipment</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .payment-form {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 2rem;
+        }
+        .order-summary {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 2rem;
+            position: sticky;
+            top: 20px;
+        }
+        .total-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .test-cards {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+        .card-logos {
+            display: flex;
+            gap: 10px;
+            margin-top: 1rem;
+        }
+        .card-logo {
+            width: 40px;
+            height: 25px;
+            background: #e9ecef;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="{% url 'home' %}">Georgian Equipment</a>
+            <div class="d-flex">
+                <span class="navbar-text">
+                    <i class="fas fa-lock me-2"></i>Secure Payment
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'cart:cart_detail' %}">Cart</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'orders:checkout' %}">Checkout</a></li>
+                <li class="breadcrumb-item active">Payment</li>
+            </ol>
+        </nav>
+
+        <h2 class="mb-4">
+            <i class="fas fa-credit-card me-2"></i>Payment Information
+        </h2>
+
+        <div class="row">
+            <!-- Payment Form -->
+            <div class="col-lg-8">
+                <!-- Test Cards Info -->
+                <div class="test-cards">
+                    <h6><i class="fas fa-info-circle me-2"></i>Test Payment Information</h6>
+                    <p class="mb-2">Use these test card numbers:</p>
+                    <ul class="mb-0">
+                        <li><strong>4111 1111 1111 1111</strong> - Successful payment</li>
+                        <li><strong>4000 0000 0000 0002</strong> - Declined payment</li>
+                        <li>Any future expiry date and any 3-digit CVV</li>
+                    </ul>
+                </div>
+
+                <div class="payment-form">
+                    <form method="POST" id="payment-form">
+                        {% csrf_token %}
+                        
+                        <!-- Payment Method -->
+                        <h5 class="mb-3">Payment Method</h5>
+                        <div class="mb-4">
+                            {% for choice in form.payment_method %}
+                            <div class="form-check">
+                                {{ choice.tag }}
+                                <label class="form-check-label" for="{{ choice.id_for_label }}">
+                                    <i class="fas fa-credit-card me-2"></i>{{ choice.choice_label }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                            <div class="card-logos">
+                                <div class="card-logo">VISA</div>
+                                <div class="card-logo">MC</div>
+                                <div class="card-logo">AMEX</div>
+                            </div>
+                        </div>
+
+                        <!-- Card Information -->
+                        <h5 class="mb-3">Card Information</h5>
+                        
+                        <div class="mb-3">
+                            {{ form.card_name.label_tag }}
+                            {{ form.card_name }}
+                            {% if form.card_name.errors %}
+                                <div class="text-danger small">{{ form.card_name.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.card_number.label_tag }}
+                            {{ form.card_number }}
+                            {% if form.card_number.errors %}
+                                <div class="text-danger small">{{ form.card_number.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                {{ form.expiry_month.label_tag }}
+                                {{ form.expiry_month }}
+                                {% if form.expiry_month.errors %}
+                                    <div class="text-danger small">{{ form.expiry_month.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.expiry_year.label_tag }}
+                                {{ form.expiry_year }}
+                                {% if form.expiry_year.errors %}
+                                    <div class="text-danger small">{{ form.expiry_year.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.cvv.label_tag }}
+                                {{ form.cvv }}
+                                {% if form.cvv.errors %}
+                                    <div class="text-danger small">{{ form.cvv.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Security Notice -->
+                        <div class="alert alert-info">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            Your payment information is secure and encrypted. We never store your card details.
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg" id="pay-button">
+                                <i class="fas fa-lock me-2"></i>Pay {{ order.total_amount }} ₾
+                            </button>
+                            <a href="{% url 'orders:checkout' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Checkout
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="col-lg-4">
+                <div class="order-summary">
+                    <h5 class="mb-3">Order Summary</h5>
+                    <p><strong>Order #{{ order.order_number }}</strong></p>
+                    
+                    <!-- Order Items -->
+                    {% for item in order.items.all %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <div>
+                            <div>{{ item.product_name }}</div>
+                            <small class="text-muted">Qty: {{ item.quantity }}</small>
+                        </div>
+                        <div>{{ item.total_price }} ₾</div>
+                    </div>
+                    {% endfor %}
+                    
+                    <hr>
+                    
+                    <!-- Billing Address -->
+                    <h6>Billing Address</h6>
+                    <p class="small">
+                        {{ order.full_billing_name }}<br>
+                        {{ order.billing_address }}<br>
+                        {{ order.billing_city }}, {{ order.billing_postal_code }}<br>
+                        {{ order.billing_country }}<br>
+                        {{ order.billing_phone }}
+                    </p>
+                    
+                    {% if order.different_shipping %}
+                    <h6>Shipping Address</h6>
+                    <p class="small">
+                        {{ order.full_shipping_name }}<br>
+                        {{ order.shipping_address_display }}<br>
+                        {{ order.shipping_phone }}
+                    </p>
+                    {% endif %}
+                    
+                    <hr>
+                    
+                    <!-- Totals -->
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span>{{ order.subtotal }} ₾</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Shipping:</span>
+                        <span>{% if order.shipping_cost > 0 %}{{ order.shipping_cost }} ₾{% else %}Free{% endif %}</span>
+                    </div>
+                    
+                    {% if order.tax_amount > 0 %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tax:</span>
+                        <span>{{ order.tax_amount }} ₾</span>
+                    </div>
+                    {% endif %}
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="fw-bold">Total:</span>
+                        <span class="total-price">{{ order.total_amount }} ₾</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Format card number input
+        document.getElementById('card-number').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\s/g, '').replace(/[^0-9]/gi, '');
+            let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+            e.target.value = formattedValue;
+        });
+
+        // Prevent form double submission
+        document.getElementById('payment-form').addEventListener('submit', function() {
+            const button = document.getElementById('pay-button');
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing Payment...';
+        });
+
+        // CVV input validation
+        document.getElementById('id_cvv').addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        });
+    </script>
+</body>
+</html>
