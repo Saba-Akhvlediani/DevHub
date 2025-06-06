@@ -1,5 +1,5 @@
-Model,product Name,Category,Pictures,Description,ონლაინ
-1101,ინდუსტრიული ფენი,ფენი,D:\FumaCRM8 Client\20210329\tmpfiles\DA185E73-5830-4A8E-9D65-21B200934379.jpg,"Power 2000W
+﻿Model ,Product Name ,Category,Description,ონლაინ
+1101,ინდუსტრიული ფენი,ინდუსტრიული ფენი,"Power 2000W
 Voltage 220V
 Frequency 50Hz
 Temp & Air Stream: 
@@ -8,8 +8,8 @@ Temp & Air Stream:
 Cable length 3m
 Accessories OK
 BMC OK
-",157.69 ₾
-1102,ინდუსტრიული ფენი,ფენი,D:\FumaCRM8 Client\20210329\tmpfiles\B6EBDCDD-C0A8-4BBD-A85B-21B200934652.jpg,"Rated Voltage:220V
+",157.6923077
+1102,ინდუსტრიული ფენი,ინდუსტრიული ფენი,"Rated Voltage:220V
 Rated Output Power:2000W
 Frequency:50 Hz
 Air Temperature 1:50℃
@@ -20,41 +20,73 @@ Air Flow 1:250 L/min
 Air Flow 2:250 L/min
 Air Flow 3:500 L/min
 Weight:1kg
-",137.69 ₾
-1103,MPP ინდუსტრიული ფენი,ფენი,D:\FumaCRM8 Client\20210329\tmpfiles\46C9920A-0770-4AFF-B0B5-21B2009348AC.jpg,"Power：2000W 
+",137.6923077
+1103,MPP ინდუსტრიული ფენი,ინდუსტრიული ფენი,"Power：2000W 
 Voltage:220-240V
 Frequency:50~60Hz
 Temperature&Air Flow:  I:50°C, 250l/min 
                                    II: 50-450°C, 250l/min
                                    III：90-600℃，500l/min
 Cable length: 1.8m
-VDE 插头",92.31 ₾
-1360,საღებავის გამფრქვევი,საღებავსკი,D:\FumaCRM8 Client\20210329\tmpfiles\DEDBA67A-EA86-4A63-9B21-21B2009359F1.jpg,"Power:600W
-Frequency:50-60Hz
-Voltage:220-240V
-Painting System:HVLP
-Paint Reservior:1000ml
-Max. Viscosity:100 din/sec
-Max. Flow:1200ml/min
-Air pressure:22Kpa
-Assembled nozzle Size: 2.6mm
-
-*Viscosity cupX1PC
-*Cleaning needleX1PC
-*Cleaning brushX1PC
-*Nozzles: 2.2/1.8/1.5mm each 1pc",129.23 ₾
-1365,HVLP საღებავის გამფრქვევი 850v,საღებავსკი,D:\FumaCRM8 Client\20210329\tmpfiles\43093A00-C6E2-4E1E-85F3-21B200935DBD.jpg,"Power: 650W
-Voltage: 220V
-Frequency: 50Hz
-Max flow: 800ml/min
-Paint reservoir :800ml
-Max Viscosity :60din/sec
-Nozzle :1.8/2.6mm
-Weight :2kg
-",206.15 ₾
-1380, საღებავის გამფრქვევი 800v,საღებავსკი,Picture,"Voltage 220V
+VDE 插头",92.30769231
+2220,დარტყმითი ბურღი 13mm 1050w,ბურღი,"Power 1050W
+Voltage 220V
 Frequency 50Hz
-Paint Reservior 800ml
-Max. Viscosity 120 Din/sec
-Power 800W
-Max. Flow 1200 ml/min",192.31 ₾
+No Load Speed 0-2800 ~ 0-1100rpm
+Drilling Depth In Wood 30mm
+Drilling Depth In Metal 13mm
+Drilling Depth In Concrete 16mm
+Cable length 3m
+Weight 3.7kg
+BMC OK
+",238.4615385
+2221,დარტყმითი ბურღი 13mm 1050w,ბურღი,"    1050 W
+    Precisely made armature and field
+    powerful 1050W mototr
+    2speed metal gearbox
+    drilling/hammer drilling mode
+    13mm strong keyed chuck
+    speed control anti-dust switch
+    depth guide for blind holes
+
+",181.5384615
+2250,დარტყმითი ბურღი 13mm 850w,ბურღი,"Power:850W
+Voltage:220V
+Frequency:50Hz
+No Load Speed:0-3000rpm",113.0769231
+6110,პოლირების აპარატი 1200w 180mm,პოლირება,"Rated Voltage:220V
+Rated Input Power:1200W
+Dimensions:33x17x12cm
+Wheel Diameter:180MM
+Frequency:50HZ
+No-Load Speed:600-3000rpm
+",218.4615385
+6112,პოლირების აპარატი 1400w 180mm,პოლირება,"Disc Capacity:180mm
+Rated Voltage:220V
+Rated  Frequency:50HZ
+Rated Input Power:1400W
+No-load speed:800-3000r/min",186.1538462
+6115,პოლირების აპარატი 1050w 180mm,პოლირება,"Disc Capacity:180mm
+Rated Voltage:220V
+Rated  Frequency:50HZ
+Rated Input Power:1050W
+No-load speed:600-2000r/min
+",197.6923077
+RH-2441,რეგულირებადი ქანჩის გასაღები,ქანჩები,"Size: 8 Inch
+Maximum Opening: 30mm 
+Total Length: 200mm 
+Throat Depth: 27mm 
+Material: Carbon Steel 
+Finish Type: matte chrome Head Style: Adjustable open Weight: 0.28 Kg",16.15384615
+RH-2442,რეგულირებადი ქანჩის გასაღები,ქანჩები,"Size:10 Inch
+Maximum Opening: 35mm 
+Total Length: 250mm 
+Throat Depth: 31mm 
+Material: Carbon Steel 
+Finish Type: matte chrome Head Style: Adjustable open Weight:0.48Kg",22.30769231
+RH-2443,რეგულირებადი ქანჩის გასაღები,ქანჩები,"Size: 12 Inch 
+Maximum Opening: 42mm 
+Total Length: 300mm 
+Throat Depth: 39mm 
+Material: Carbon Steel 
+Finish Type: matte chrome Head Style: Adjustable open Weight: 0.75Kg",28.46153846
