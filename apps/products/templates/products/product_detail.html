@@ -101,11 +101,6 @@
                 <!-- Price and Stock -->
                 <div class="price-display mb-4">
                     <h3 class="mb-0">{{ product.formatted_price }}</h3>
-                    {% if product.is_available %}
-                    <small>✓ In Stock ({{ product.stock_quantity }} available)</small>
-                    {% else %}
-                    <small>✗ Out of Stock</small>
-                    {% endif %}
                 </div>
 
                 <!-- Quick Specs -->

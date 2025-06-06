@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.views.generic import ListView, DetailView
-from django.db.models import Q
+from django.db.models import Q, Count
 from django_filters.views import FilterView
 from .models import Product, Category
 from .filters import ProductFilter
@@ -15,12 +15,28 @@ class ProductListView(FilterView):
     paginate_by = 12
 
     def get_queryset(self):
-        return Product.objects.filter(is_active=True).select_related('category').prefetch_related('images')
+        """Get base queryset - simplified for debugging"""
+        queryset = Product.objects.all().select_related('category').prefetch_related('images')
+        print(f"Debug - Total products in database: {queryset.count()}")
+        
+        # Filter for active products
+        active_queryset = queryset.filter(is_active=True)
+        print(f"Debug - Active products: {active_queryset.count()}")
+        
+        return active_queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['categories'] = Category.objects.filter(is_active=True)
-        context['featured_products'] = Product.objects.filter(is_active=True, is_featured=True)[:6]
+        
+        # Debug: Print filter results
+        if hasattr(self, 'filterset'):
+            print(f"Debug - Filtered products count: {self.filterset.qs.count()}")
+        
+        # Add categories
+        categories = Category.objects.filter(is_active=True).order_by('name')
+        print(f"Debug - Categories count: {categories.count()}")
+        
+        context['categories'] = categories
         return context
 
 
@@ -31,7 +47,9 @@ class ProductDetailView(DetailView):
     context_object_name = 'product'
 
     def get_queryset(self):
-        return Product.objects.filter(is_active=True).select_related('category').prefetch_related('images', 'specifications')
+        return Product.objects.filter(is_active=True)\
+            .select_related('category')\
+            .prefetch_related('images', 'specifications')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
