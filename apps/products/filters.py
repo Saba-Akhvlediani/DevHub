@@ -30,10 +30,10 @@ class ProductFilter(django_filters.FilterSet):
         field_name='price',
         lookup_expr='gte',
         widget=forms.NumberInput(attrs={
-            'placeholder': 'Min Price (₾)',
+            'placeholder': 'From',
             'class': 'form-control',
             'min': '0',
-            'step': '0.01'
+            'step': '1'
         }),
         label='Min Price (₾)'
     )
@@ -42,42 +42,21 @@ class ProductFilter(django_filters.FilterSet):
         field_name='price',
         lookup_expr='lte',
         widget=forms.NumberInput(attrs={
-            'placeholder': 'Max Price (₾)',
+            'placeholder': 'To',
             'class': 'form-control',
             'min': '0',
-            'step': '0.01'
+            'step': '1'
         }),
         label='Max Price (₾)'
-    )
-    
-    # Technical specifications
-    power = django_filters.CharFilter(
-        field_name='power',
-        lookup_expr='icontains',
-        widget=forms.TextInput(attrs={
-            'placeholder': 'Power (e.g., 2000W)',
-            'class': 'form-control'
-        }),
-        label='Power'
-    )
-    
-    voltage = django_filters.CharFilter(
-        field_name='voltage',
-        lookup_expr='icontains',
-        widget=forms.TextInput(attrs={
-            'placeholder': 'Voltage (e.g., 220V)',
-            'class': 'form-control'
-        }),
-        label='Voltage'
     )
     
     # Sorting options
     SORT_CHOICES = [
         ('', 'Default'),
+        ('price', 'Price: Low to High'),
+        ('-price', 'Price: High to Low'),
         ('name', 'Name A-Z'),
         ('-name', 'Name Z-A'),
-        ('price', 'Price Low to High'),
-        ('-price', 'Price High to Low'),
         ('-created_at', 'Newest First'),
         ('created_at', 'Oldest First'),
     ]
@@ -111,4 +90,4 @@ class ProductFilter(django_filters.FilterSet):
 
     class Meta:
         model = Product
-        fields = ['search', 'category', 'price_min', 'price_max', 'power', 'voltage']
+        fields = ['search', 'category', 'price_min', 'price_max']

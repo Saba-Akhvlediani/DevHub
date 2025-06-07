@@ -47,7 +47,7 @@ class Command(BaseCommand):
                 if dry_run:
                     # Rollback transaction in dry-run mode
                     transaction.set_rollback(True)
-                    
+                
         except Exception as e:
             self.stdout.write(
                 self.style.ERROR(f'Error importing products: {str(e)}')
@@ -60,7 +60,7 @@ class Command(BaseCommand):
         products_updated = 0
         categories_created = 0
         errors = []
-
+        
         with open(csv_file, 'r', encoding='utf-8') as file:
             # Read CSV with proper handling of the BOM and spaces
             reader = csv.DictReader(file)
@@ -182,12 +182,12 @@ class Command(BaseCommand):
                         except Product.DoesNotExist:
                             self.stdout.write(f'[DRY-RUN] Would create: {model_number} - {product_name} (slug: {product_slug})')
                             products_created += 1
-                    
+                        
                 except Exception as e:
                     error_msg = f'Error processing row {row_num}: {str(e)}'
                     errors.append(error_msg)
                     self.stdout.write(self.style.ERROR(error_msg))
-
+        
         # Summary
         self.stdout.write('\n' + '='*50)
         self.stdout.write('IMPORT SUMMARY')

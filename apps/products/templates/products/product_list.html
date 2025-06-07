@@ -26,7 +26,23 @@
             border-radius: 10px;
             padding: 1.5rem;
             position: sticky;
-            top: 20px;
+            top: 1rem;
+            max-height: calc(100vh - 2rem);
+            overflow-y: auto;
+        }
+        .filter-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .filter-sidebar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        .filter-sidebar::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+        .filter-sidebar::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
         }
         .price-tag {
             background: #007bff;
@@ -43,6 +59,7 @@
         .filter-section:last-child {
             border-bottom: none;
             margin-bottom: 0;
+            padding-bottom: 0;
         }
         .list-group-flush {
             margin-top: 0.5rem;
@@ -73,6 +90,17 @@
             border-radius: 12px;
             font-size: 0.8rem;
         }
+        .filter-buttons {
+            position: sticky;
+            bottom: 0;
+            background: #f8f9fa;
+            padding-top: 1rem;
+            border-top: 1px solid #dee2e6;
+            margin-top: 1rem;
+        }
+        .main-content {
+            min-height: 100vh;
+        }
     </style>
 </head>
 <body>
@@ -93,8 +121,12 @@
                     </li>
                 </ul>
                 <div class="d-flex">
-                    <form class="d-flex" method="GET" action="{% url 'products:product_search' %}">
-                        <input class="form-control me-2" type="search" name="q" placeholder="Search products..." value="{{ request.GET.q }}">
+                    <form class="d-flex" method="GET">
+                        <input class="form-control me-2" 
+                               type="search" 
+                               name="search" 
+                               placeholder="Search products..." 
+                               value="{{ request.GET.search }}">
                         <button class="btn btn-outline-primary" type="submit">Search</button>
                     </form>
                 </div>
@@ -105,8 +137,8 @@
     <!-- Main Content -->
     <div class="container mt-4">
         <div class="row">
-            <!-- Filters Sidebar - COMPLETELY MANUAL -->
-            <div class="col-lg-3 mb-4">
+            <!-- Filters Sidebar -->
+            <div class="col-lg-3">
                 <div class="filter-sidebar">
                     <h5 class="mb-3">
                         <i class="fas fa-filter me-2"></i>Filter Products
@@ -114,15 +146,10 @@
                     
                     <!-- MANUAL FORM - NO DJANGO FORM RENDERING -->
                     <form method="GET" id="filter-form">
-                        <!-- Search Filter -->
-                        <div class="filter-section">
-                            <label class="form-label fw-bold">Search</label>
-                            <input type="text" 
-                                   name="search" 
-                                   class="form-control" 
-                                   placeholder="Search by product name or model..." 
-                                   value="{{ request.GET.search }}">
-                        </div>
+                        <!-- Preserve search parameter if it exists -->
+                        {% if request.GET.search %}
+                        <input type="hidden" name="search" value="{{ request.GET.search }}">
+                        {% endif %}
 
                         <!-- Category Filter -->
                         <div class="filter-section">
@@ -155,70 +182,67 @@
                         <!-- Price Filter -->
                         <div class="filter-section">
                             <label class="form-label fw-bold">Price Range</label>
-                            <div class="row">
-                                <div class="col-6">
-                                    <label class="form-label small">Min Price</label>
-                                    <input type="number" 
-                                           name="price_min" 
-                                           class="form-control" 
-                                           placeholder="Min Price (₾)" 
-                                           value="{{ request.GET.price_min }}" 
-                                           min="0" 
-                                           step="0.01">
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label small">Max Price</label>
-                                    <input type="number" 
-                                           name="price_max" 
-                                           class="form-control" 
-                                           placeholder="Max Price (₾)" 
-                                           value="{{ request.GET.price_max }}" 
-                                           min="0" 
-                                           step="0.01">
-                                </div>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text">GEL</span>
+                                <input type="number" 
+                                       name="price_min" 
+                                       class="form-control" 
+                                       placeholder="From" 
+                                       value="{{ request.GET.price_min }}" 
+                                       min="0" 
+                                       step="1">
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-text">GEL</span>
+                                <input type="number" 
+                                       name="price_max" 
+                                       class="form-control" 
+                                       placeholder="To" 
+                                       value="{{ request.GET.price_max }}" 
+                                       min="0" 
+                                       step="1">
                             </div>
                         </div>
 
-                        <!-- Technical Specifications -->
-                        <div class="filter-section">
-                            <label class="form-label fw-bold">Technical Specs</label>
-                            <div class="mb-3">
-                                <label class="form-label small">Power</label>
-                                <input type="text" 
-                                       name="power" 
-                                       class="form-control" 
-                                       placeholder="e.g., 2000W" 
-                                       value="{{ request.GET.power }}">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label small">Voltage</label>
-                                <input type="text" 
-                                       name="voltage" 
-                                       class="form-control" 
-                                       placeholder="e.g., 220V" 
-                                       value="{{ request.GET.voltage }}">
-                            </div>
+                        <div class="filter-buttons">
+                            <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                            {% if request.GET %}
+                            <a href="{% url 'products:product_list' %}" class="btn btn-outline-secondary w-100 mt-2">Clear Filters</a>
+                            {% endif %}
                         </div>
-
-                        <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
-                        {% if request.GET %}
-                        <a href="{% url 'products:product_list' %}" class="btn btn-outline-secondary w-100 mt-2">Clear Filters</a>
-                        {% endif %}
                     </form>
                 </div>
             </div>
 
             <!-- Products Grid -->
-            <div class="col-lg-9">
+            <div class="col-lg-9 main-content">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2>All Products</h2>
-                    <span class="text-muted">
-                        {% if filter.qs %}
-                            {{ filter.qs.count }} products found
-                        {% else %}
-                            0 products found
-                        {% endif %}
-                    </span>
+                    <div class="d-flex align-items-center">
+                        <h2 class="mb-0">All Products</h2>
+                        <span class="text-muted ms-3">
+                            {% if filter.qs %}
+                                {{ filter.qs.count }} products found
+                            {% else %}
+                                0 products found
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-sort me-2 text-muted"></i>
+                        <select name="sort_by" class="form-select form-select-sm" style="width: auto;" form="filter-form" onchange="this.form.submit()">
+                            <option value="">Default</option>
+                            <option value="price" {% if request.GET.sort_by == "price" %}selected{% endif %}>
+                                <i class="fas fa-arrow-up"></i> Price: Low to High
+                            </option>
+                            <option value="-price" {% if request.GET.sort_by == "-price" %}selected{% endif %}>
+                                <i class="fas fa-arrow-down"></i> Price: High to Low
+                            </option>
+                            <option value="name" {% if request.GET.sort_by == "name" %}selected{% endif %}>Name A-Z</option>
+                            <option value="-name" {% if request.GET.sort_by == "-name" %}selected{% endif %}>Name Z-A</option>
+                            <option value="-created_at" {% if request.GET.sort_by == "-created_at" %}selected{% endif %}>Newest First</option>
+                            <option value="created_at" {% if request.GET.sort_by == "created_at" %}selected{% endif %}>Oldest First</option>
+                        </select>
+                    </div>
                 </div>
 
                 {% if filter.qs %}
@@ -253,7 +277,10 @@
                                 
                                 <div class="mt-auto">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <span class="price-tag">{{ product.formatted_price }}</span>
+                                        <span class="price-tag">
+                                            <i class="fas fa-tag me-1"></i>
+                                            GEL {{ product.formatted_price }}
+                                        </span>
                                         {% if product.is_available %}
                                         <span class="badge bg-success">In Stock</span>
                                         {% else %}
