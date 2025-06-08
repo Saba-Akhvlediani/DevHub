@@ -38,6 +38,13 @@
             font-weight: bold;
             color: #007bff;
         }
+        .login-required-notice {
+            background: linear-gradient(135deg, #17a2b8, #138496);
+            color: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -61,9 +68,28 @@
                     <a href="{% url 'cart:cart_detail' %}" class="btn btn-outline-primary me-2">
                         <i class="fas fa-shopping-cart"></i> Cart ({{ cart.total_items }})
                     </a>
-                    {% if user.is_authenticated %}
-                    <a href="{% url 'cart:wishlist_detail' %}" class="btn btn-outline-secondary">
+                    <a href="{% url 'cart:wishlist_detail' %}" class="btn btn-outline-secondary me-2">
                         <i class="fas fa-heart"></i> Wishlist
+                        {% if wishlist_total_items %}({{ wishlist_total_items }}){% endif %}
+                    </a>
+                    {% if user.is_authenticated %}
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user"></i> {{ user.first_name|default:user.username }}
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="fas fa-user me-2"></i>Profile</a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:order_history' %}"><i class="fas fa-list me-2"></i>Orders</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                    {% else %}
+                    <a href="{% url 'accounts:login' %}" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
+                    <a href="{% url 'accounts:register' %}" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i> Register
                     </a>
                     {% endif %}
                 </div>
@@ -177,17 +203,29 @@
                     
                     <div class="d-grid gap-2">
                         {% if user.is_authenticated %}
-                        <a href="{% url 'orders:checkout' %}" class="btn btn-primary btn-lg">
-                            <i class="fas fa-credit-card me-2"></i>Proceed to Checkout
-                        </a>
+                            <a href="{% url 'orders:checkout' %}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-credit-card me-2"></i>Proceed to Checkout
+                            </a>
                         {% else %}
-                        <div class="alert alert-warning">
-                            <i class="fas fa-info-circle me-2"></i>
-                            Please <a href="{% url 'accounts:login' %}?next={% url 'orders:checkout' %}" class="alert-link">login</a> to proceed with checkout.
-                        </div>
-                        <a href="{% url 'accounts:login' %}?next={% url 'orders:checkout' %}" class="btn btn-primary btn-lg">
-                            <i class="fas fa-sign-in-alt me-2"></i>Login to Checkout
-                        </a>
+                            <div class="alert alert-info mb-3">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Almost there!</strong> Please log in or create an account to complete your purchase.
+                                <hr>
+                                <div class="d-grid gap-2">
+                                    <a href="{% url 'accounts:login' %}?next={% url 'orders:checkout' %}" class="btn btn-primary">
+                                        <i class="fas fa-sign-in-alt me-2"></i>Login to Checkout
+                                    </a>
+                                    <a href="{% url 'accounts:register' %}?next={% url 'orders:checkout' %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-user-plus me-2"></i>Create Account
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-lock me-1"></i>
+                                    Your cart will be saved when you log in
+                                </small>
+                            </div>
                         {% endif %}
                         <a href="{% url 'products:product_list' %}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-2"></i>Continue Shopping

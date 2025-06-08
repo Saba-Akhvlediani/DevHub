@@ -34,6 +34,21 @@ class Cart(models.Model):
         """Clear all items from cart"""
         self.items.all().delete()
 
+    def merge_with_user_cart(self, user_cart):
+        """Merge this session cart with user cart when user logs in"""
+        for session_item in self.items.all():
+            user_item, created = user_cart.items.get_or_create(
+                product=session_item.product,
+                defaults={'quantity': session_item.quantity}
+            )
+            if not created:
+                # Item already exists in user cart, add quantities
+                user_item.quantity += session_item.quantity
+                user_item.save()
+        
+        # Clear session cart after merging
+        self.clear()
+
 
 class CartItem(models.Model):
     """Individual items in a shopping cart"""
@@ -57,8 +72,9 @@ class CartItem(models.Model):
 
 
 class Wishlist(models.Model):
-    """User's wishlist"""
-    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name=_("User"))
+    """User's wishlist - can be session-based or user-based"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True, verbose_name=_("User"))
+    session_key = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("Session Key"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created At"))
 
     class Meta:
@@ -66,7 +82,31 @@ class Wishlist(models.Model):
         verbose_name_plural = _('Wishlists')
 
     def __str__(self):
-        return f"Wishlist for {self.user.username}"
+        if self.user:
+            return f"Wishlist for {self.user.username}"
+        return f"Wishlist for session {self.session_key}"
+
+    @property
+    def total_items(self):
+        """Get total number of items in wishlist"""
+        return self.items.count()
+
+    def clear(self):
+        """Clear all items from wishlist"""
+        self.items.all().delete()
+
+    def merge_with_user_wishlist(self, user_wishlist):
+        """Merge this session wishlist with user wishlist when user logs in"""
+        for session_item in self.items.all():
+            # Only add if not already in user's wishlist
+            if not user_wishlist.items.filter(product=session_item.product).exists():
+                WishlistItem.objects.create(
+                    wishlist=user_wishlist,
+                    product=session_item.product
+                )
+        
+        # Clear session wishlist after merging
+        self.clear()
 
 
 class WishlistItem(models.Model):
@@ -81,4 +121,4 @@ class WishlistItem(models.Model):
         verbose_name_plural = _('Wishlist Items')
 
     def __str__(self):
-        return f"{self.product.name} in {self.wishlist.user.username}'s wishlist"
+        return f"{self.product.name} in wishlist"

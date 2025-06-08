@@ -3,7 +3,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 from apps.products.models import Product
 from .models import Cart, CartItem, Wishlist, WishlistItem
@@ -11,17 +10,73 @@ import json
 
 
 def get_or_create_cart(request):
-    """Get or create cart for authenticated user only"""
-    if not request.user.is_authenticated:
-        return None
-    cart, created = Cart.objects.get_or_create(user=request.user)
-    return cart
+    """Get or create cart for both authenticated and anonymous users"""
+    if request.user.is_authenticated:
+        # For authenticated users, use user-based cart
+        cart, created = Cart.objects.get_or_create(user=request.user)
+        
+        # Check if there's a session cart to merge
+        session_key = request.session.session_key
+        if session_key:
+            try:
+                session_cart = Cart.objects.get(session_key=session_key, user__isnull=True)
+                if session_cart.items.exists():
+                    # Merge session cart with user cart
+                    session_cart.merge_with_user_cart(cart)
+                    session_cart.delete()
+            except Cart.DoesNotExist:
+                pass
+        
+        return cart
+    else:
+        # For anonymous users, use session-based cart
+        if not request.session.session_key:
+            request.session.create()
+        
+        session_key = request.session.session_key
+        cart, created = Cart.objects.get_or_create(
+            session_key=session_key,
+            user__isnull=True
+        )
+        return cart
 
 
-@login_required
+def get_or_create_wishlist(request):
+    """Get or create wishlist for both authenticated and anonymous users"""
+    if request.user.is_authenticated:
+        # For authenticated users, use user-based wishlist
+        wishlist, created = Wishlist.objects.get_or_create(user=request.user)
+        
+        # Check if there's a session wishlist to merge
+        session_key = request.session.session_key
+        if session_key:
+            try:
+                session_wishlist = Wishlist.objects.get(session_key=session_key, user__isnull=True)
+                if session_wishlist.items.exists():
+                    # Merge session wishlist with user wishlist
+                    session_wishlist.merge_with_user_wishlist(wishlist)
+                    session_wishlist.delete()
+            except Wishlist.DoesNotExist:
+                pass
+        
+        return wishlist
+    else:
+        # For anonymous users, use session-based wishlist
+        if not request.session.session_key:
+            request.session.create()
+        
+        session_key = request.session.session_key
+        wishlist, created = Wishlist.objects.get_or_create(
+            session_key=session_key,
+            user__isnull=True
+        )
+        return wishlist
+
+
+# NO @login_required - WORKS FOR EVERYONE
 @require_POST
 def add_to_cart(request, product_id):
-    """Add product to cart - requires login"""
+    """Add product to cart - works for both authenticated and anonymous users"""
     product = get_object_or_404(Product, id=product_id, is_active=True)
     
     if not product.is_available:
@@ -65,11 +120,12 @@ def add_to_cart(request, product_id):
     return redirect('cart:cart_detail')
 
 
-@login_required
+# NO @login_required - WORKS FOR EVERYONE
 def cart_detail(request):
-    """Display cart contents - requires login"""
+    """Display cart contents - works for both authenticated and anonymous users"""
     cart = get_or_create_cart(request)
     cart_items = cart.items.select_related('product').all() if cart else []
+    
     context = {
         'cart': cart,
         'cart_items': cart_items
@@ -77,10 +133,10 @@ def cart_detail(request):
     return render(request, 'cart/cart_detail.html', context)
 
 
-@login_required
+# NO @login_required - WORKS FOR EVERYONE
 @require_POST
 def update_cart_item(request, item_id):
-    """Update cart item quantity - requires login"""
+    """Update cart item quantity - works for both authenticated and anonymous users"""
     cart = get_or_create_cart(request)
     cart_item = get_object_or_404(CartItem, id=item_id, cart=cart)
     
@@ -113,10 +169,10 @@ def update_cart_item(request, item_id):
     return redirect('cart:cart_detail')
 
 
-@login_required
+# NO @login_required - WORKS FOR EVERYONE
 @require_POST
 def remove_from_cart(request, item_id):
-    """Remove item from cart - requires login"""
+    """Remove item from cart - works for both authenticated and anonymous users"""
     cart = get_or_create_cart(request)
     cart_item = get_object_or_404(CartItem, id=item_id, cart=cart)
     product_name = cart_item.product.name
@@ -134,9 +190,9 @@ def remove_from_cart(request, item_id):
     return redirect('cart:cart_detail')
 
 
-@login_required
+# NO @login_required - WORKS FOR EVERYONE
 def clear_cart(request):
-    """Clear all items from cart - requires login"""
+    """Clear all items from cart - works for both authenticated and anonymous users"""
     cart = get_or_create_cart(request)
     if cart:
         cart.clear()
@@ -153,114 +209,170 @@ def clear_cart(request):
     return redirect('cart:cart_detail')
 
 
-# Wishlist Views
-@login_required
+# WISHLIST VIEWS - NO @login_required - WORKS FOR EVERYONE
 @require_POST
 def add_to_wishlist(request, product_id):
-    """Add product to wishlist"""
-    product = get_object_or_404(Product, id=product_id, is_active=True)
-    wishlist, created = Wishlist.objects.get_or_create(user=request.user)
-    
-    wishlist_item, created = WishlistItem.objects.get_or_create(
-        wishlist=wishlist,
-        product=product
-    )
-    
-    if created:
-        message = f'Added {product.name} to your wishlist.'
-        success = True
-    else:
-        message = f'{product.name} is already in your wishlist.'
-        success = False
-    
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return JsonResponse({
-            'success': success,
-            'message': message,
-            'in_wishlist': True
-        })
-    
-    if success:
-        messages.success(request, message)
-    else:
-        messages.info(request, message)
-    
-    return redirect('products:product_detail', slug=product.slug)
-
-
-@login_required
-def wishlist_detail(request):
-    """Display user's wishlist"""
+    """Add product to wishlist - works for both authenticated and anonymous users"""
     try:
-        wishlist = Wishlist.objects.get(user=request.user)
+        product = get_object_or_404(Product, id=product_id, is_active=True)
+        wishlist = get_or_create_wishlist(request)
+        
+        # Check if item already exists
+        if wishlist.items.filter(product=product).exists():
+            success = False
+            message = f'{product.name} is already in your wishlist.'
+        else:
+            WishlistItem.objects.create(wishlist=wishlist, product=product)
+            success = True
+            message = f'Added {product.name} to your wishlist.'
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': success,
+                'message': message,
+                'wishlist_total_items': wishlist.total_items
+            })
+        
+        if success:
+            messages.success(request, message)
+        else:
+            messages.info(request, message)
+        
+        return redirect('products:product_detail', slug=product.slug)
+    except Exception as e:
+        print(f"Error adding to wishlist: {str(e)}")  # Debug log
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': False,
+                'message': 'An error occurred while adding to wishlist. Please try again.'
+            }, status=500)
+        messages.error(request, 'An error occurred while adding to wishlist. Please try again.')
+        return redirect('products:product_detail', slug=product.slug)
+
+
+# NO @login_required - WORKS FOR EVERYONE
+def wishlist_detail(request):
+    """Display user's wishlist - works for both authenticated and anonymous users"""
+    try:
+        wishlist = get_or_create_wishlist(request)
         wishlist_items = wishlist.items.select_related('product').all()
-    except Wishlist.DoesNotExist:
-        wishlist_items = []
-    
-    context = {
-        'wishlist_items': wishlist_items
-    }
-    return render(request, 'cart/wishlist_detail.html', context)
+        
+        context = {
+            'wishlist': wishlist,
+            'wishlist_items': wishlist_items,
+            'cart_total_items': get_or_create_cart(request).total_items
+        }
+        return render(request, 'cart/wishlist_detail.html', context)
+    except Exception as e:
+        print(f"Error displaying wishlist: {str(e)}")  # Debug log
+        messages.error(request, 'An error occurred while loading your wishlist. Please try again.')
+        return redirect('home')
 
 
-@login_required
+# NO @login_required - WORKS FOR EVERYONE
 @require_POST
 def remove_from_wishlist(request, product_id):
-    """Remove product from wishlist"""
-    product = get_object_or_404(Product, id=product_id)
+    """Remove product from wishlist - works for both authenticated and anonymous users"""
     try:
-        wishlist = Wishlist.objects.get(user=request.user)
-        wishlist_item = WishlistItem.objects.get(wishlist=wishlist, product=product)
-        wishlist_item.delete()
-        message = f'Removed {product.name} from your wishlist.'
-        success = True
-    except (Wishlist.DoesNotExist, WishlistItem.DoesNotExist):
-        message = f'{product.name} was not in your wishlist.'
-        success = False
-    
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return JsonResponse({
-            'success': success,
-            'message': message,
-            'in_wishlist': False
-        })
-    
-    if success:
-        messages.success(request, message)
-    else:
-        messages.error(request, message)
-    
-    return redirect('cart:wishlist_detail')
-
-
-@login_required
-def move_to_cart_from_wishlist(request, product_id):
-    """Move item from wishlist to cart"""
-    product = get_object_or_404(Product, id=product_id, is_active=True)
-    
-    if not product.is_available:
-        messages.error(request, 'This product is out of stock.')
+        product = get_object_or_404(Product, id=product_id)
+        wishlist = get_or_create_wishlist(request)
+        
+        try:
+            wishlist_item = wishlist.items.get(product=product)
+            wishlist_item.delete()
+            message = f'Removed {product.name} from wishlist.'
+            success = True
+        except WishlistItem.DoesNotExist:
+            message = f'{product.name} was not in your wishlist.'
+            success = False
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': success,
+                'message': message,
+                'wishlist_total_items': wishlist.total_items
+            })
+        
+        if success:
+            messages.success(request, message)
+        else:
+            messages.info(request, message)
+        
         return redirect('cart:wishlist_detail')
-    
-    # Add to cart
-    cart = get_or_create_cart(request)
-    cart_item, created = CartItem.objects.get_or_create(
-        cart=cart,
-        product=product,
-        defaults={'quantity': 1}
-    )
-    
-    if not created:
-        cart_item.quantity += 1
-        cart_item.save()
-    
-    # Remove from wishlist
+    except Exception as e:
+        print(f"Error removing from wishlist: {str(e)}")  # Debug log
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': False,
+                'message': 'An error occurred while removing from wishlist. Please try again.'
+            }, status=500)
+        messages.error(request, 'An error occurred while removing from wishlist. Please try again.')
+        return redirect('cart:wishlist_detail')
+
+
+# NO @login_required - WORKS FOR EVERYONE
+@require_POST
+def move_to_cart_from_wishlist(request, product_id):
+    """Move item from wishlist to cart - works for both authenticated and anonymous users"""
     try:
-        wishlist = Wishlist.objects.get(user=request.user)
-        wishlist_item = WishlistItem.objects.get(wishlist=wishlist, product=product)
-        wishlist_item.delete()
-    except (Wishlist.DoesNotExist, WishlistItem.DoesNotExist):
-        pass
-    
-    messages.success(request, f'Moved {product.name} to cart.')
-    return redirect('cart:wishlist_detail')
+        product = get_object_or_404(Product, id=product_id)
+        wishlist = get_or_create_wishlist(request)
+        cart = get_or_create_cart(request)
+        
+        try:
+            # Remove from wishlist
+            wishlist_item = wishlist.items.get(product=product)
+            wishlist_item.delete()
+            
+            # Add to cart
+            cart_item, created = CartItem.objects.get_or_create(
+                cart=cart,
+                product=product,
+                defaults={'quantity': 1}
+            )
+            
+            if not created:
+                cart_item.quantity += 1
+                cart_item.save()
+            
+            message = f'Moved {product.name} to cart.'
+            success = True
+        except WishlistItem.DoesNotExist:
+            message = f'{product.name} was not in your wishlist.'
+            success = False
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': success,
+                'message': message,
+                'wishlist_total_items': wishlist.total_items,
+                'cart_total_items': cart.total_items
+            })
+        
+        if success:
+            messages.success(request, message)
+        else:
+            messages.info(request, message)
+        
+        return redirect('cart:wishlist_detail')
+    except Exception as e:
+        print(f"Error moving item to cart: {str(e)}")  # Debug log
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': False,
+                'message': 'An error occurred while moving item to cart. Please try again.'
+            }, status=500)
+        messages.error(request, 'An error occurred while moving item to cart. Please try again.')
+        return redirect('cart:wishlist_detail')
+
+
+def get_cart_count(request):
+    """Helper function to get cart count for templates"""
+    cart = get_or_create_cart(request)
+    return cart.total_items if cart else 0
+
+
+def get_wishlist_count(request):
+    """Helper function to get wishlist count for templates"""
+    wishlist = get_or_create_wishlist(request)
+    return wishlist.items.count() if wishlist else 0
