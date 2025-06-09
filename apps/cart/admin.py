@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Cart, CartItem, Wishlist, WishlistItem
+from .models import Cart, CartItem, Wishlist, WishlistItem, CompareList, CompareItem
 
 
 class CartItemInline(admin.TabularInline):
@@ -47,3 +47,27 @@ class WishlistItemAdmin(admin.ModelAdmin):
     list_display = ['product', 'wishlist', 'added_at']
     list_filter = ['added_at']
     search_fields = ['product__name', 'wishlist__user__username']
+
+
+class CompareItemInline(admin.TabularInline):
+    model = CompareItem
+    extra = 0
+
+
+@admin.register(CompareList)
+class CompareListAdmin(admin.ModelAdmin):
+    list_display = ['user', 'items_count', 'created_at']
+    search_fields = ['user__username']
+    readonly_fields = ['created_at', 'updated_at']
+    inlines = [CompareItemInline]
+
+    def items_count(self, obj):
+        return obj.items.count()
+    items_count.short_description = 'Items Count'
+
+
+@admin.register(CompareItem)
+class CompareItemAdmin(admin.ModelAdmin):
+    list_display = ['product', 'compare_list', 'added_at']
+    list_filter = ['added_at']
+    search_fields = ['product__name', 'compare_list__user__username']

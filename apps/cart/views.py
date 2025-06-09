@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.models import User
 from apps.products.models import Product
-from .models import Cart, CartItem, Wishlist, WishlistItem
+from .models import Cart, CartItem, Wishlist, WishlistItem, CompareList, CompareItem
 import json
 
 
@@ -71,6 +71,32 @@ def get_or_create_wishlist(request):
             user__isnull=True
         )
         return wishlist
+
+
+def get_or_create_compare_list(request):
+    """Get or create compare list for both authenticated and anonymous users"""
+    if request.user.is_authenticated:
+        compare_list, created = CompareList.objects.get_or_create(user=request.user)
+        
+        # Check if there's a session compare list to merge
+        session_key = request.session.session_key
+        if session_key:
+            try:
+                session_compare = CompareList.objects.get(session_key=session_key)
+                if created:
+                    # Move all items from session compare list to user's compare list
+                    session_compare.items.all().update(compare_list=compare_list)
+                session_compare.delete()
+            except CompareList.DoesNotExist:
+                pass
+    else:
+        session_key = request.session.session_key
+        if not session_key:
+            request.session.create()
+            session_key = request.session.session_key
+        compare_list, created = CompareList.objects.get_or_create(session_key=session_key)
+    
+    return compare_list
 
 
 # NO @login_required - WORKS FOR EVERYONE
@@ -376,3 +402,104 @@ def get_wishlist_count(request):
     """Helper function to get wishlist count for templates"""
     wishlist = get_or_create_wishlist(request)
     return wishlist.items.count() if wishlist else 0
+
+
+@require_POST
+def add_to_compare(request, product_id):
+    """Add a product to comparison list"""
+    compare_list = get_or_create_compare_list(request)
+    product = get_object_or_404(Product, id=product_id)
+    
+    # Check if product is already in compare list
+    if CompareItem.objects.filter(compare_list=compare_list, product=product).exists():
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': False,
+                'message': 'Product is already in your comparison list.',
+                'compare_total_items': compare_list.items.count()
+            })
+        messages.info(request, 'Product is already in your comparison list.')
+        return redirect('cart:compare_detail') if request.POST.get('redirect_to_compare') else redirect('products:product_detail', slug=product.slug)
+    
+    # Check if compare list has reached maximum items (e.g., 4)
+    if compare_list.items.count() >= 4:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': False,
+                'message': 'You can compare up to 4 products at a time. Please remove a product first.',
+                'compare_total_items': compare_list.items.count()
+            })
+        messages.warning(request, 'You can compare up to 4 products at a time. Please remove a product first.')
+        return redirect('cart:compare_detail') if request.POST.get('redirect_to_compare') else redirect('products:product_detail', slug=product.slug)
+    
+    # Add product to compare list
+    CompareItem.objects.create(compare_list=compare_list, product=product)
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'message': f'{product.name} has been added to your comparison list.',
+            'compare_total_items': compare_list.items.count()
+        })
+    
+    messages.success(request, f'{product.name} has been added to your comparison list.')
+    return redirect('cart:compare_detail') if request.POST.get('redirect_to_compare') else redirect('products:product_detail', slug=product.slug)
+
+
+def remove_from_compare(request, product_id):
+    """Remove a product from comparison list"""
+    compare_list = get_or_create_compare_list(request)
+    compare_item = get_object_or_404(CompareItem, compare_list=compare_list, product_id=product_id)
+    compare_item.delete()
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'message': 'Product removed from comparison.',
+            'compare_total_items': compare_list.items.count()
+        })
+    
+    messages.success(request, 'Product removed from comparison.')
+    return redirect('cart:compare_detail')
+
+
+def clear_compare(request):
+    """Remove all products from comparison list"""
+    compare_list = get_or_create_compare_list(request)
+    compare_list.items.all().delete()
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'message': 'Comparison list cleared.',
+            'compare_total_items': 0
+        })
+    
+    messages.success(request, 'Comparison list cleared.')
+    return redirect('cart:compare_detail')
+
+
+def compare_detail(request):
+    """Display comparison page"""
+    compare_list = get_or_create_compare_list(request)
+    compare_items = compare_list.items.select_related('product').all()
+    
+    # Get all unique specification keys
+    spec_keys = set()
+    for item in compare_items:
+        product = item.product
+        # Add built-in specs
+        spec_keys.update([
+            'Power', 'Voltage', 'Frequency', 'Temperature Settings',
+            'Air Flow Settings', 'Cable Length', 'Weight', 'Material',
+            'Noise Level', 'Motor Type', 'Heating Element Type'
+        ])
+        # Add custom specs if any
+        if hasattr(product, 'custom_specs'):
+            spec_keys.update(product.custom_specs.keys())
+    
+    context = {
+        'compare_items': compare_items,
+        'spec_keys': sorted(spec_keys),
+    }
+    return render(request, 'cart/compare_detail.html', context)

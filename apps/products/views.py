@@ -4,6 +4,7 @@ from django.db.models import Q, Count
 from django_filters.views import FilterView
 from .models import Product, Category
 from .filters import ProductFilter
+from apps.cart.views import get_cart_count, get_wishlist_count, get_or_create_compare_list
 
 
 class ProductListView(FilterView):
@@ -37,6 +38,9 @@ class ProductListView(FilterView):
         print(f"Debug - Categories count: {categories.count()}")
         
         context['categories'] = categories
+        context['cart_total_items'] = get_cart_count(self.request)
+        context['wishlist_total_items'] = get_wishlist_count(self.request)
+        context['compare_total_items'] = get_or_create_compare_list(self.request).items.count()
         return context
 
 
@@ -53,12 +57,18 @@ class ProductDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['cart_total_items'] = get_cart_count(self.request)
+        context['wishlist_total_items'] = get_wishlist_count(self.request)
+        context['compare_total_items'] = get_or_create_compare_list(self.request).items.count()
         
-        # Related products from same category
-        context['related_products'] = Product.objects.filter(
-            category=self.object.category,
-            is_active=True
-        ).exclude(id=self.object.id)[:4]
+        # Get related products
+        product = self.get_object()
+        related_products = Product.objects.filter(
+            Q(category=product.category) & 
+            Q(is_active=True) & 
+            ~Q(id=product.id)
+        ).order_by('-created_at')[:4]
+        context['related_products'] = related_products
         
         return context
 

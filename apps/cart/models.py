@@ -122,3 +122,54 @@ class WishlistItem(models.Model):
 
     def __str__(self):
         return f"{self.product.name} in wishlist"
+
+
+class CompareList(models.Model):
+    """Product comparison list - can be session-based or user-based"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True, verbose_name=_("User"))
+    session_key = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("Session Key"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created At"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated At"))
+
+    class Meta:
+        verbose_name = _('Compare List')
+        verbose_name_plural = _('Compare Lists')
+
+    def __str__(self):
+        if self.user:
+            return f"Compare list for {self.user.username}"
+        return f"Compare list for session {self.session_key}"
+
+    @property
+    def total_items(self):
+        """Get total number of items in compare list"""
+        return self.items.count()
+
+    def clear(self):
+        """Clear all items from compare list"""
+        self.items.all().delete()
+
+    def merge_with_user_compare_list(self, user_compare_list):
+        """Merge this session compare list with user compare list when user logs in"""
+        for session_item in self.items.all():
+            if not user_compare_list.items.filter(product=session_item.product).exists():
+                CompareItem.objects.create(
+                    compare_list=user_compare_list,
+                    product=session_item.product
+                )
+        self.clear()
+
+
+class CompareItem(models.Model):
+    """Individual items in a compare list"""
+    compare_list = models.ForeignKey(CompareList, on_delete=models.CASCADE, related_name='items', verbose_name=_("Compare List"))
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name=_("Product"))
+    added_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Added At"))
+
+    class Meta:
+        unique_together = ['compare_list', 'product']
+        verbose_name = _('Compare Item')
+        verbose_name_plural = _('Compare Items')
+
+    def __str__(self):
+        return f"{self.product.name} in compare list"
