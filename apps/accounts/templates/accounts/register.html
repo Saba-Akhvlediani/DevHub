@@ -180,39 +180,104 @@
         const strengthBar = document.getElementById('strength-bar');
         const strengthText = document.getElementById('strength-text');
 
+        function checkPasswordStrength(password) {
+            let strength = 0;
+            let feedback = [];
+
+            // Length check
+            if (password.length >= 8) {
+                strength += 1;
+            } else {
+                feedback.push('At least 8 characters');
+            }
+
+            // Uppercase check
+            if (/[A-Z]/.test(password)) {
+                strength += 1;
+            } else {
+                feedback.push('One uppercase letter');
+            }
+
+            // Lowercase check
+            if (/[a-z]/.test(password)) {
+                strength += 1;
+            } else {
+                feedback.push('One lowercase letter');
+            }
+
+            // Number check
+            if (/[0-9]/.test(password)) {
+                strength += 1;
+            } else {
+                feedback.push('One number');
+            }
+
+            // Special character check
+            if (/[!?.,>]/.test(password)) {
+                strength += 1;
+            } else {
+                feedback.push('One special character (!, ?, ., ,, >)');
+            }
+
+            return { strength, feedback };
+        }
+
         passwordInput.addEventListener('input', function() {
             const password = this.value;
-            let strength = 0;
+            const { strength, feedback } = checkPasswordStrength(password);
             let text = '';
             let color = '';
-
-            if (password.length >= 8) strength++;
-            if (/[a-z]/.test(password)) strength++;
-            if (/[A-Z]/.test(password)) strength++;
-            if (/[0-9]/.test(password)) strength++;
-            if (/[^A-Za-z0-9]/.test(password)) strength++;
 
             switch (strength) {
                 case 0:
                 case 1:
-                    text = 'Weak';
+                    text = 'Very Weak';
                     color = 'bg-danger';
                     break;
                 case 2:
+                    text = 'Weak';
+                    color = 'bg-danger';
+                    break;
                 case 3:
                     text = 'Medium';
                     color = 'bg-warning';
                     break;
                 case 4:
-                case 5:
                     text = 'Strong';
+                    color = 'bg-info';
+                    break;
+                case 5:
+                    text = 'Very Strong';
                     color = 'bg-success';
                     break;
             }
 
             strengthBar.className = `strength-bar ${color}`;
             strengthBar.style.width = `${(strength / 5) * 100}%`;
-            strengthText.textContent = password ? text : 'Enter a password';
+            
+            if (password) {
+                if (strength < 5) {
+                    strengthText.innerHTML = `Password needs: ${feedback.join(', ')}`;
+                    strengthText.className = 'text-danger small';
+                } else {
+                    strengthText.textContent = 'Password is strong!';
+                    strengthText.className = 'text-success small';
+                }
+            } else {
+                strengthText.textContent = 'Enter a password';
+                strengthText.className = 'text-muted small';
+            }
+        });
+
+        // Email validation
+        const emailInput = document.getElementById('{{ form.email.id_for_label }}');
+        emailInput.addEventListener('input', function() {
+            const email = this.value;
+            if (email && !email.includes('@')) {
+                this.setCustomValidity('Email must contain @ symbol');
+            } else {
+                this.setCustomValidity('');
+            }
         });
 
         // Confirm password validation

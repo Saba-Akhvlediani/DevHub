@@ -85,6 +85,10 @@ class UserRegistrationForm(forms.Form):
         if User.objects.filter(email=email).exists():
             raise ValidationError('An account with this email already exists.')
         
+        # Email validation
+        if '@' not in email:
+            raise ValidationError('Email must contain @ symbol.')
+        
         return email
     
     def clean_password(self):
@@ -94,11 +98,17 @@ class UserRegistrationForm(forms.Form):
         if len(password) < 8:
             raise ValidationError('Password must be at least 8 characters long.')
         
-        if not re.search(r'[A-Za-z]', password):
-            raise ValidationError('Password must contain at least one letter.')
+        if not re.search(r'[A-Z]', password):
+            raise ValidationError('Password must contain at least one uppercase letter.')
+        
+        if not re.search(r'[a-z]', password):
+            raise ValidationError('Password must contain at least one lowercase letter.')
         
         if not re.search(r'[0-9]', password):
             raise ValidationError('Password must contain at least one number.')
+        
+        if not re.search(r'[!?.,>]', password):
+            raise ValidationError('Password must contain at least one special character (!, ?, ., ,, >).')
         
         return password
     

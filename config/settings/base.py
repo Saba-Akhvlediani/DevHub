@@ -83,6 +83,19 @@ DATABASES = {
     }
 }
 
+# Authentication Settings
+LOGIN_URL = 'accounts:login'
+LOGIN_REDIRECT_URL = 'accounts:profile'
+LOGOUT_REDIRECT_URL = 'home'
+
+# Session Settings
+SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
+SESSION_COOKIE_SECURE = False  # Allow HTTP in development
+SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access
+SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF protection
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -90,6 +103,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8,
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -98,6 +114,18 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+# Security Settings
+SECURE_SSL_REDIRECT = False  # Allow HTTP in development
+SECURE_HSTS_SECONDS = 0  # Disable HSTS in development
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+SECURE_HSTS_PRELOAD = False
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# CSRF Settings
+CSRF_COOKIE_SECURE = False  # Allow HTTP in development
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Lax'
 
 # Internationalization
 LANGUAGE_CODE = config('LANGUAGE_CODE', default='ka-ge')
@@ -145,11 +173,6 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 SITE_NAME = config('SITE_NAME', default='Georgian E-commerce')
 SITE_URL = config('SITE_URL', default='http://localhost:8000')
 DEFAULT_CURRENCY = config('DEFAULT_CURRENCY', default='₾')
-
-# Session configuration
-SESSION_COOKIE_AGE = 86400 * 7  # 1 week
-SESSION_SAVE_EVERY_REQUEST = True
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 # Cart session key
 CART_SESSION_ID = 'cart'
