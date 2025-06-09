@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
+from django.core.paginator import Paginator
 from apps.orders.models import Order
 from .forms import UserRegistrationForm, UserProfileForm
 
@@ -131,7 +132,12 @@ def change_password_view(request):
 @login_required
 def order_history_view(request):
     """User's order history"""
-    orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    orders_list = Order.objects.filter(user=request.user).order_by('-created_at')
+    
+    # Pagination
+    paginator = Paginator(orders_list, 10)  # Show 10 orders per page
+    page_number = request.GET.get('page')
+    orders = paginator.get_page(page_number)
     
     context = {
         'orders': orders,
