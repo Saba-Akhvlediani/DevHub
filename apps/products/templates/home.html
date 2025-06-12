@@ -1,90 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Georgian Industrial Equipment Shop</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .hero-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 100px 0;
-        }
-        .product-card {
-            transition: transform 0.3s;
-            border: none;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .product-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-        }
-        .category-card {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 2rem;
-            text-align: center;
-            transition: all 0.3s;
-        }
-        .category-card:hover {
-            background: #e9ecef;
-            transform: translateY(-3px);
-        }
-    </style>
-</head>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold text-primary" href="{% url 'home' %}">Georgian Equipment</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'home' %}">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'products:product_list' %}">All Products</a>
-                    </li>
-                </ul>
-                <div class="d-flex">
-                    <form class="d-flex me-3" method="GET" action="{% url 'products:product_search' %}">
-                        <input class="form-control me-2" type="search" name="q" placeholder="Search products...">
-                        <button class="btn btn-outline-primary" type="submit">Search</button>
-                    </form>
-                    <a href="{% url 'cart:cart_detail' %}" class="btn btn-outline-primary me-2">
-                        <i class="fas fa-shopping-cart"></i> Cart
-                    </a>
-                    {% if user.is_authenticated %}
-                    <div class="dropdown me-2">
-                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user"></i> {{ user.first_name|default:user.username }}
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="fas fa-user me-2"></i>Profile</a></li>
-                            <li><a class="dropdown-item" href="{% url 'accounts:order_history' %}"><i class="fas fa-list me-2"></i>Orders</a></li>
-                            <li><a class="dropdown-item" href="{% url 'cart:wishlist_detail' %}"><i class="fas fa-heart me-2"></i>Wishlist</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'accounts:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
-                        </ul>
-                    </div>
-                    {% else %}
-                    <a href="{% url 'accounts:login' %}" class="btn btn-outline-secondary me-2">
-                        <i class="fas fa-sign-in-alt"></i> Login
-                    </a>
-                    <a href="{% url 'accounts:register' %}" class="btn btn-primary">
-                        <i class="fas fa-user-plus"></i> Register
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </nav>
+{% extends 'base.html' %}
 
+{% block title %}Georgian Industrial Equipment Shop{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 100px 0;
+    }
+    .product-card {
+        transition: transform 0.3s;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    }
+    .category-card {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s;
+    }
+    .category-card:hover {
+        background: #e9ecef;
+        transform: translateY(-3px);
+    }
+    .cart-badge {
+        background: #dc3545;
+        color: white;
+        border-radius: 50%;
+        padding: 0.2rem 0.5rem;
+        font-size: 0.8rem;
+        margin-left: 0.3rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <!-- CSRF Token for AJAX requests -->
+    {% csrf_token %}
+    
     <!-- Hero Section -->
     <section class="hero-section">
         <div class="container">
@@ -92,12 +51,26 @@
                 <div class="col-lg-6">
                     <h1 class="display-4 fw-bold mb-4">Professional Industrial Equipment</h1>
                     <p class="lead mb-4">Discover our wide range of high-quality industrial fans, heat guns, and professional equipment for all your industrial needs.</p>
-                    <a href="{% url 'products:product_list' %}" class="btn btn-light btn-lg me-3">
-                        <i class="fas fa-shopping-bag me-2"></i>Shop Now
-                    </a>
-                    <a href="#featured" class="btn btn-outline-light btn-lg">
-                        <i class="fas fa-star me-2"></i>Featured Products
-                    </a>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <a href="{% url 'products:product_list' %}" class="btn btn-light btn-lg">
+                            <i class="fas fa-shopping-bag me-2"></i>Shop Now
+                        </a>
+                        <a href="#featured" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-star me-2"></i>Featured Products
+                        </a>
+                    </div>
+                    
+                    {% if not user.is_authenticated %}
+                    <div class="mt-4 p-3 bg-white bg-opacity-20 rounded">
+                        <p class="mb-2 small">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Shop as Guest:</strong> Add items to cart and wishlist without creating an account!
+                        </p>
+                        <p class="mb-0 small">
+                            Login when you're ready to checkout and your items will be saved.
+                        </p>
+                    </div>
+                    {% endif %}
                 </div>
                 <div class="col-lg-6 text-center">
                     <i class="fas fa-tools fa-10x opacity-75"></i>
@@ -130,7 +103,22 @@
                             <h6 class="card-title">{{ product.name }}</h6>
                             <p class="text-muted small">{{ product.model_number }}</p>
                             <p class="text-primary fw-bold mt-auto">{{ product.formatted_price }}</p>
-                            <a href="{% url 'products:product_detail' product.slug %}" class="btn btn-primary">View Details</a>
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'products:product_detail' product.slug %}" class="btn btn-primary">View Details</a>
+                                {% if product.stock_quantity > 0 %}
+                                <button class="btn btn-outline-success add-to-cart" 
+                                        data-product-id="{{ product.id }}"
+                                        data-product-name="{{ product.name }}">
+                                    <i class="fas fa-shopping-cart me-2"></i>Add to Cart
+                                </button>
+                                {% endif %}
+                                <form method="POST" action="{% url 'cart:add_to_wishlist' product.id %}" class="add-to-wishlist-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger w-100">
+                                        <i class="fas fa-heart me-2"></i>Add to Wishlist
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -147,31 +135,49 @@
         </div>
     </section>
 
-    <!-- Categories -->
-    {% if categories %}
+    <!-- Shopping Experience Notice for Anonymous Users -->
+    {% if not user.is_authenticated %}
     <section class="py-5 bg-light">
         <div class="container">
-            <div class="text-center mb-5">
-                <h2 class="display-6 fw-bold">Shop by Category</h2>
-                <p class="lead text-muted">Find the right equipment for your needs</p>
-            </div>
-            <div class="row">
-                {% for category in categories %}
-                <div class="col-md-4 mb-4">
-                    <div class="category-card">
-                        {% if category.image %}
-                        <img src="{{ category.image.url }}" class="mb-3" style="height: 80px; object-fit: contain;" alt="{{ category.name }}">
-                        {% else %}
-                        <i class="fas fa-cog fa-3x text-primary mb-3"></i>
-                        {% endif %}
-                        <h5>{{ category.name }}</h5>
-                        <p class="text-muted">{{ category.description|truncatewords:10 }}</p>
-                        <a href="{% url 'products:category_detail' category.slug %}" class="btn btn-outline-primary">
-                            Browse {{ category.name }}
-                        </a>
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <h4 class="mb-3">
+                                <i class="fas fa-shopping-cart text-primary me-2"></i>
+                                Shop Without Registration
+                            </h4>
+                            <p class="lead mb-4">
+                                Start shopping immediately! Add products to your cart and wishlist without creating an account.
+                            </p>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <i class="fas fa-plus-circle fa-2x text-success mb-2"></i>
+                                    <h6>Add to Cart</h6>
+                                    <small class="text-muted">Browse and add products instantly</small>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <i class="fas fa-heart fa-2x text-danger mb-2"></i>
+                                    <h6>Save to Wishlist</h6>
+                                    <small class="text-muted">Keep track of favorites</small>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <i class="fas fa-lock fa-2x text-warning mb-2"></i>
+                                    <h6>Login to Checkout</h6>
+                                    <small class="text-muted">Secure payment when ready</small>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <a href="{% url 'accounts:register' %}" class="btn btn-primary me-2">
+                                    <i class="fas fa-user-plus me-1"></i>Create Account
+                                </a>
+                                <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary">
+                                    <i class="fas fa-sign-in-alt me-1"></i>Login
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                {% endfor %}
             </div>
         </div>
     </section>
@@ -200,7 +206,22 @@
                             <h6 class="card-title">{{ product.name }}</h6>
                             <p class="text-muted small">{{ product.model_number }}</p>
                             <p class="text-primary fw-bold mt-auto">{{ product.formatted_price }}</p>
-                            <a href="{% url 'products:product_detail' product.slug %}" class="btn btn-primary">View Details</a>
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'products:product_detail' product.slug %}" class="btn btn-primary">View Details</a>
+                                {% if product.stock_quantity > 0 %}
+                                <button class="btn btn-outline-success add-to-cart" 
+                                        data-product-id="{{ product.id }}"
+                                        data-product-name="{{ product.name }}">
+                                    <i class="fas fa-shopping-cart me-2"></i>Add to Cart
+                                </button>
+                                {% endif %}
+                                <form method="POST" action="{% url 'cart:add_to_wishlist' product.id %}" class="add-to-wishlist-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger w-100">
+                                        <i class="fas fa-heart me-2"></i>Add to Wishlist
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -215,27 +236,77 @@
         <div class="container text-center">
             <h2 class="mb-4">Ready to Find Your Perfect Equipment?</h2>
             <p class="lead mb-4">Browse our complete collection of professional industrial equipment</p>
-            <a href="{% url 'products:product_list' %}" class="btn btn-light btn-lg">
-                <i class="fas fa-shopping-bag me-2"></i>Shop All Products
-            </a>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="bg-dark text-white py-4">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <h5>Georgian Equipment</h5>
-                    <p class="text-muted">Your trusted partner for industrial equipment in Georgia.</p>
-                </div>
-                <div class="col-md-6 text-end">
-                    <p class="text-muted">© 2025 Georgian Equipment. All rights reserved.</p>
-                </div>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="{% url 'products:product_list' %}" class="btn btn-light btn-lg">
+                    <i class="fas fa-shopping-bag me-2"></i>Shop All Products
+                </a>
+                {% if not user.is_authenticated %}
+                <a href="{% url 'accounts:register' %}" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-user-plus me-2"></i>Create Account
+                </a>
+                {% endif %}
             </div>
         </div>
-    </footer>
+    </section>
+{% endblock %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+{% block extra_js %}
+<script>
+    // Add to Cart functionality
+    document.querySelectorAll('.add-to-cart').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            const productName = this.dataset.productName;
+            
+            fetch(`/cart/add/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update cart badge
+                    const cartBadge = document.querySelector('.cart-badge');
+                    if (cartBadge) {
+                        cartBadge.textContent = data.cart_count;
+                    }
+                    
+                    // Show success message
+                    showNotification('Success!', `${productName} added to cart.`, 'success');
+                } else {
+                    showNotification('Error!', data.message || 'Failed to add to cart.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error!', 'Failed to add to cart.', 'error');
+            });
+        });
+    });
+
+    // Notification function
+    function showNotification(title, message, type) {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        notification.innerHTML = `
+            <strong>${title}</strong> ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        // Add to page
+        document.body.appendChild(notification);
+        
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 3000);
+    }
+</script>
+{% endblock %}

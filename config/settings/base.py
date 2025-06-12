@@ -23,7 +23,7 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
-    'django_filters',
+    'django_filters'            
 ]
 
 LOCAL_APPS = [
@@ -64,6 +64,10 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.i18n',  # For language support
                 'django.template.context_processors.media',  # For media files in templates
+                'apps.cart.context_processors.cart_context',
+                'apps.cart.context_processors.wishlist_context',
+                'apps.cart.context_processors.compare_context',
+                'apps.products.context_processors.categories_context',
             ],
         },
     },
@@ -82,19 +86,6 @@ DATABASES = {
         'PORT': config('DB_PORT', default='5432'),
     }
 }
-
-# Authentication Settings
-LOGIN_URL = 'accounts:login'
-LOGIN_REDIRECT_URL = 'accounts:profile'
-LOGOUT_REDIRECT_URL = 'home'
-
-# Session Settings
-SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
-SESSION_COOKIE_SECURE = False  # Allow HTTP in development
-SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access
-SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF protection
-SESSION_SAVE_EVERY_REQUEST = True
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -174,6 +165,11 @@ SITE_NAME = config('SITE_NAME', default='Georgian E-commerce')
 SITE_URL = config('SITE_URL', default='http://localhost:8000')
 DEFAULT_CURRENCY = config('DEFAULT_CURRENCY', default='₾')
 
+# Session configuration
+SESSION_COOKIE_AGE = 86400 * 7  # 1 week
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
 # Cart session key
 CART_SESSION_ID = 'cart'
 
@@ -222,4 +218,15 @@ LOGGING = {
             'propagate': False,
         },
     },
+}
+
+# REST Framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'knox.auth.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
 }

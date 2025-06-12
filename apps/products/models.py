@@ -28,6 +28,11 @@ class Category(models.Model):
     def get_absolute_url(self):
         return reverse('products:category_detail', args=[self.slug])
 
+    @property
+    def product_count(self):
+        """Return the number of active products in this category"""
+        return self.products.filter(is_active=True).count()
+
 
 class Product(models.Model):
     """Industrial equipment products"""

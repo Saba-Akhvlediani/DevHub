@@ -1,102 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopping Cart - Georgian Equipment</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .cart-item {
-            border: 1px solid #e9ecef;
-            border-radius: 10px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            transition: box-shadow 0.3s;
-        }
-        .cart-item:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .product-image {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 8px;
-        }
-        .quantity-input {
-            width: 80px;
-        }
-        .cart-summary {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 2rem;
-            position: sticky;
-            top: 20px;
-        }
-        .total-price {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #007bff;
-        }
-        .login-required-notice {
-            background: linear-gradient(135deg, #17a2b8, #138496);
-            color: white;
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-        }
-    </style>
-</head>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold text-primary" href="{% url 'home' %}">Georgian Equipment</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'home' %}">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'products:product_list' %}">All Products</a>
-                    </li>
-                </ul>
-                <div class="d-flex">
-                    <a href="{% url 'cart:cart_detail' %}" class="btn btn-outline-primary me-2">
-                        <i class="fas fa-shopping-cart"></i> Cart ({{ cart.total_items }})
-                    </a>
-                    <a href="{% url 'cart:wishlist_detail' %}" class="btn btn-outline-secondary me-2">
-                        <i class="fas fa-heart"></i> Wishlist
-                        {% if wishlist_total_items %}({{ wishlist_total_items }}){% endif %}
-                    </a>
-                    {% if user.is_authenticated %}
-                    <div class="dropdown">
-                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user"></i> {{ user.first_name|default:user.username }}
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="fas fa-user me-2"></i>Profile</a></li>
-                            <li><a class="dropdown-item" href="{% url 'accounts:order_history' %}"><i class="fas fa-list me-2"></i>Orders</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'accounts:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
-                        </ul>
-                    </div>
-                    {% else %}
-                    <a href="{% url 'accounts:login' %}" class="btn btn-outline-secondary me-2">
-                        <i class="fas fa-sign-in-alt"></i> Login
-                    </a>
-                    <a href="{% url 'accounts:register' %}" class="btn btn-primary">
-                        <i class="fas fa-user-plus"></i> Register
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </nav>
+{% extends 'base.html' %}
 
+{% block title %}Shopping Cart - Georgian Equipment{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cart-item {
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: box-shadow 0.3s;
+    }
+    .cart-item:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .product-image {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+    .quantity-input {
+        width: 80px;
+    }
+    .cart-summary {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 2rem;
+        position: sticky;
+        top: 20px;
+    }
+    .total-price {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #007bff;
+    }
+    .login-required-notice {
+        background: linear-gradient(135deg, #17a2b8, #138496);
+        color: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
     <!-- Cart Content -->
     <div class="container mt-4">
         <!-- Breadcrumb -->
@@ -200,86 +149,72 @@
                         <span class="fw-bold">Total:</span>
                         <span class="total-price">{{ cart.total_price }} ₾</span>
                     </div>
-                    
-                    <div class="d-grid gap-2">
-                        {% if user.is_authenticated %}
-                            <a href="{% url 'orders:checkout' %}" class="btn btn-primary btn-lg">
-                                <i class="fas fa-credit-card me-2"></i>Proceed to Checkout
-                            </a>
-                        {% else %}
-                            <div class="alert alert-info mb-3">
-                                <i class="fas fa-info-circle me-2"></i>
-                                <strong>Almost there!</strong> Please log in or create an account to complete your purchase.
-                                <hr>
-                                <div class="d-grid gap-2">
-                                    <a href="{% url 'accounts:login' %}?next={% url 'orders:checkout' %}" class="btn btn-primary">
-                                        <i class="fas fa-sign-in-alt me-2"></i>Login to Checkout
-                                    </a>
-                                    <a href="{% url 'accounts:register' %}?next={% url 'orders:checkout' %}" class="btn btn-outline-primary">
-                                        <i class="fas fa-user-plus me-2"></i>Create Account
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="text-center">
-                                <small class="text-muted">
-                                    <i class="fas fa-lock me-1"></i>
-                                    Your cart will be saved when you log in
-                                </small>
-                            </div>
-                        {% endif %}
-                        <a href="{% url 'products:product_list' %}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left me-2"></i>Continue Shopping
+
+                    <!-- Checkout Button -->
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'orders:checkout' %}" class="btn btn-primary w-100">
+                            <i class="fas fa-credit-card me-2"></i>Proceed to Checkout
                         </a>
-                    </div>
+                    {% else %}
+                        <div class="login-required-notice">
+                            <h6><i class="fas fa-info-circle me-2"></i>Login Required</h6>
+                            <p class="mb-2">Please login to complete your purchase.</p>
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'accounts:login' %}" class="btn btn-light btn-sm">
+                                    <i class="fas fa-sign-in-alt me-1"></i>Login
+                                </a>
+                                <a href="{% url 'accounts:register' %}" class="btn btn-outline-light btn-sm">
+                                    <i class="fas fa-user-plus me-1"></i>Create Account
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
-
         {% else %}
         <!-- Empty Cart -->
         <div class="text-center py-5">
-            <i class="fas fa-shopping-cart fa-4x text-muted mb-4"></i>
-            <h4 class="text-muted mb-3">Your cart is empty</h4>
-            <p class="text-muted mb-4">Add some products to your cart to see them here.</p>
+            <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">Your cart is empty</h4>
+            <p class="text-muted mb-4">Add some products to get started!</p>
             <a href="{% url 'products:product_list' %}" class="btn btn-primary">
-                <i class="fas fa-shopping-bag me-2"></i>Start Shopping
+                <i class="fas fa-shopping-bag me-2"></i>Continue Shopping
             </a>
         </div>
         {% endif %}
     </div>
+{% endblock %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Quantity button handlers
-        document.querySelectorAll('.quantity-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const action = this.dataset.action;
-                const input = this.closest('.d-flex').querySelector('input[name="quantity"]');
-                const form = this.closest('form');
-                let currentValue = parseInt(input.value);
-                
-                if (action === 'increase') {
-                    if (currentValue < parseInt(input.max)) {
-                        input.value = currentValue + 1;
-                        form.submit();
-                    }
-                } else if (action === 'decrease') {
-                    if (currentValue > 1) {
-                        input.value = currentValue - 1;
-                        form.submit();
-                    }
+<script>
+    // Quantity button handlers
+    document.querySelectorAll('.quantity-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const action = this.dataset.action;
+            const input = this.closest('.d-flex').querySelector('input[name="quantity"]');
+            const form = this.closest('form');
+            let currentValue = parseInt(input.value);
+            
+            if (action === 'increase') {
+                if (currentValue < parseInt(input.max)) {
+                    input.value = currentValue + 1;
+                    form.submit();
                 }
-            });
+            } else if (action === 'decrease') {
+                if (currentValue > 1) {
+                    input.value = currentValue - 1;
+                    form.submit();
+                }
+            }
         });
+    });
 
-        // Auto-submit on quantity input change
-        document.querySelectorAll('input[name="quantity"]').forEach(input => {
-            input.addEventListener('change', function() {
-                if (this.value > 0) {
-                    this.closest('form').submit();
-                }
-            });
+    // Auto-submit on quantity input change
+    document.querySelectorAll('input[name="quantity"]').forEach(input => {
+        input.addEventListener('change', function() {
+            if (this.value > 0) {
+                this.closest('form').submit();
+            }
         });
-    </script>
-</body>
-</html>
+    });
+</script>

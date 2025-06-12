@@ -1,105 +1,45 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ product.name }} - Georgian Equipment</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .product-image {
-            max-height: 400px;
-            object-fit: cover;
-            border-radius: 10px;
-        }
-        .price-display {
-            background: linear-gradient(135deg, #007bff, #0056b3);
-            color: white;
-            padding: 1rem;
-            border-radius: 10px;
-            text-align: center;
-        }
-        .spec-table th {
-            background: #f8f9fa;
-            font-weight: 600;
-        }
-        .related-product-card {
-            transition: transform 0.3s;
-            border: none;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .related-product-card:hover {
-            transform: translateY(-3px);
-        }
-        .cart-badge {
-            background: #dc3545;
-            color: white;
-            border-radius: 50%;
-            padding: 0.2rem 0.5rem;
-            font-size: 0.8rem;
-            margin-left: 0.3rem;
-        }
-    </style>
-</head>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold text-primary" href="{% url 'home' %}">Georgian Equipment</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'home' %}">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'products:product_list' %}">All Products</a>
-                    </li>
-                </ul>
-                <div class="d-flex">
-                    <!-- Cart Link - Available for all users -->
-                    <a href="{% url 'cart:cart_detail' %}" class="btn btn-outline-primary me-2 position-relative">
-                        <i class="fas fa-shopping-cart"></i> Cart
-                        {% if cart_total_items > 0 %}
-                            <span class="cart-badge">{{ cart_total_items }}</span>
-                        {% endif %}
-                    </a>
-                    
-                    <!-- Wishlist Link - Available for all users -->
-                    <a href="{% url 'cart:wishlist_detail' %}" class="btn btn-outline-secondary me-2 position-relative">
-                        <i class="fas fa-heart"></i> Wishlist
-                        {% if wishlist_total_items > 0 %}
-                            <span class="cart-badge">{{ wishlist_total_items }}</span>
-                        {% endif %}
-                    </a>
+{% extends 'base.html' %}
 
-                    {% if user.is_authenticated %}
-                    <div class="dropdown">
-                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user"></i> {{ user.first_name|default:user.username }}
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="fas fa-user me-2"></i>Profile</a></li>
-                            <li><a class="dropdown-item" href="{% url 'accounts:order_history' %}"><i class="fas fa-list me-2"></i>Orders</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'accounts:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
-                        </ul>
-                    </div>
-                    {% else %}
-                    <a href="{% url 'accounts:login' %}" class="btn btn-outline-secondary me-2">
-                        <i class="fas fa-sign-in-alt"></i> Login
-                    </a>
-                    <a href="{% url 'accounts:register' %}" class="btn btn-primary">
-                        <i class="fas fa-user-plus"></i> Register
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </nav>
+{% block title %}{{ product.name }} - Georgian Equipment{% endblock %}
 
+{% block extra_css %}
+<style>
+    .product-image {
+        max-height: 400px;
+        object-fit: cover;
+        border-radius: 10px;
+    }
+    .price-display {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        padding: 1rem;
+        border-radius: 10px;
+        text-align: center;
+    }
+    .spec-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+    }
+    .related-product-card {
+        transition: transform 0.3s;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .related-product-card:hover {
+        transform: translateY(-3px);
+    }
+    .cart-badge {
+        background: #dc3545;
+        color: white;
+        border-radius: 50%;
+        padding: 0.2rem 0.5rem;
+        font-size: 0.8rem;
+        margin-left: 0.3rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
     <!-- Product Detail -->
     <div class="container mt-4">
         <!-- Breadcrumb -->
@@ -199,180 +139,91 @@
             </div>
         </div>
 
-        <!-- Product Description and Specifications -->
+        <!-- Product Details Tabs -->
         <div class="row mt-5">
             <div class="col-12">
                 <ul class="nav nav-tabs" id="productTabs" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="description-tab" data-bs-toggle="tab" data-bs-target="#description" type="button" role="tab">Description</button>
+                        <button class="nav-link active" id="description-tab" data-bs-toggle="tab" data-bs-target="#description" type="button" role="tab">
+                            <i class="fas fa-info-circle me-2"></i>Description
+                        </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="specifications-tab" data-bs-toggle="tab" data-bs-target="#specifications" type="button" role="tab">Specifications</button>
+                        <button class="nav-link" id="specifications-tab" data-bs-toggle="tab" data-bs-target="#specifications" type="button" role="tab">
+                            <i class="fas fa-cogs me-2"></i>Specifications
+                        </button>
                     </li>
-                    {% if product.includes %}
+                    {% if related_products %}
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="includes-tab" data-bs-toggle="tab" data-bs-target="#includes" type="button" role="tab">What's Included</button>
+                        <button class="nav-link" id="related-tab" data-bs-toggle="tab" data-bs-target="#related" type="button" role="tab">
+                            <i class="fas fa-link me-2"></i>Related Products
+                        </button>
                     </li>
                     {% endif %}
                 </ul>
-                
-                <div class="tab-content mt-3" id="productTabsContent">
-                    <!-- Description -->
-                    <div class="tab-pane fade show active" id="description" role="tabpanel">
-                        <div class="p-3">
-                            {{ product.description|linebreaks }}
-                        </div>
-                    </div>
-                    
-                    <!-- Specifications -->
-                    <div class="tab-pane fade" id="specifications" role="tabpanel">
-                        <div class="p-3">
-                            <table class="table table-striped spec-table">
-                                {% if product.power %}<tr><th width="30%">Power</th><td>{{ product.power }}</td></tr>{% endif %}
-                                {% if product.voltage %}<tr><th>Voltage</th><td>{{ product.voltage }}</td></tr>{% endif %}
-                                {% if product.frequency %}<tr><th>Frequency</th><td>{{ product.frequency }}</td></tr>{% endif %}
-                                {% if product.temperature_settings %}<tr><th>Temperature Settings</th><td>{{ product.temperature_settings }}</td></tr>{% endif %}
-                                {% if product.air_flow_settings %}<tr><th>Air Flow Settings</th><td>{{ product.air_flow_settings }}</td></tr>{% endif %}
-                                {% if product.cable_length %}<tr><th>Cable Length</th><td>{{ product.cable_length }}</td></tr>{% endif %}
-                                {% if product.weight %}<tr><th>Weight</th><td>{{ product.weight }}</td></tr>{% endif %}
-                                {% if product.material %}<tr><th>Material</th><td>{{ product.material }}</td></tr>{% endif %}
-                                {% if product.noise_level %}<tr><th>Noise Level</th><td>{{ product.noise_level }}</td></tr>{% endif %}
-                                {% if product.motor_type %}<tr><th>Motor Type</th><td>{{ product.motor_type }}</td></tr>{% endif %}
-                                {% if product.heating_element_type %}<tr><th>Heating Element Type</th><td>{{ product.heating_element_type }}</td></tr>{% endif %}
-                            </table>
 
-                            <!-- Custom Specifications -->
-                            {% if product.specifications.all %}
-                            <h6 class="mt-4">Additional Specifications:</h6>
-                            <table class="table table-striped">
-                                {% for spec in product.specifications.all %}
-                                <tr>
-                                    <th width="30%">{{ spec.name }}</th>
-                                    <td>{{ spec.value }}</td>
-                                </tr>
-                                {% endfor %}
-                            </table>
+                <div class="tab-content" id="productTabsContent">
+                    <!-- Description Tab -->
+                    <div class="tab-pane fade show active" id="description" role="tabpanel">
+                        <div class="p-4">
+                            {% if product.description %}
+                                {{ product.description|linebreaks }}
+                            {% else %}
+                                <p class="text-muted">No description available for this product.</p>
                             {% endif %}
                         </div>
                     </div>
-                    
-                    <!-- What's Included -->
-                    {% if product.includes %}
-                    <div class="tab-pane fade" id="includes" role="tabpanel">
-                        <div class="p-3">
-                            {{ product.includes|linebreaks }}
+
+                    <!-- Specifications Tab -->
+                    <div class="tab-pane fade" id="specifications" role="tabpanel">
+                        <div class="p-4">
+                            {% if product.specifications %}
+                            <table class="table table-striped spec-table">
+                                <tbody>
+                                    {% for key, value in product.specifications.items %}
+                                    <tr>
+                                        <th>{{ key|title }}</th>
+                                        <td>{{ value }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <p class="text-muted">No specifications available for this product.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Related Products Tab -->
+                    {% if related_products %}
+                    <div class="tab-pane fade" id="related" role="tabpanel">
+                        <div class="p-4">
+                            <div class="row">
+                                {% for related_product in related_products %}
+                                <div class="col-md-6 col-lg-4 mb-4">
+                                    <div class="card related-product-card h-100">
+                                        {% if related_product.get_main_image %}
+                                        <img src="{{ related_product.get_main_image.url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ related_product.name }}">
+                                        {% else %}
+                                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                            <i class="fas fa-image fa-3x text-muted"></i>
+                                        </div>
+                                        {% endif %}
+                                        <div class="card-body d-flex flex-column">
+                                            <h6 class="card-title">{{ related_product.name }}</h6>
+                                            <p class="text-muted small">{{ related_product.model_number }}</p>
+                                            <p class="text-primary fw-bold mt-auto">{{ related_product.formatted_price }}</p>
+                                            <a href="{% url 'products:product_detail' related_product.slug %}" class="btn btn-primary">View Details</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
                     {% endif %}
                 </div>
             </div>
         </div>
-
-        <!-- Related Products -->
-        {% if related_products %}
-        <div class="row mt-5">
-            <div class="col-12">
-                <h4 class="mb-4">Related Products</h4>
-                <div class="row">
-                    {% for related in related_products %}
-                    <div class="col-md-3 mb-3">
-                        <div class="card related-product-card">
-                            {% if related.get_main_image %}
-                            <img src="{{ related.get_main_image.url }}" class="card-img-top" style="height: 150px; object-fit: cover;" alt="{{ related.name }}">
-                            {% endif %}
-                            <div class="card-body">
-                                <h6 class="card-title">{{ related.name }}</h6>
-                                <p class="text-primary">{{ related.formatted_price }}</p>
-                                <a href="{% url 'products:product_detail' related.slug %}" class="btn btn-sm btn-outline-primary">View Details</a>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-        {% endif %}
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Handle AJAX form submissions for better UX
-        document.querySelectorAll('.add-to-cart-form, .add-to-wishlist-form').forEach(form => {
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const formData = new FormData(this);
-                const button = this.querySelector('button[type="submit"]');
-                const originalText = button.innerHTML;
-                
-                button.disabled = true;
-                button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Adding...';
-                
-                fetch(this.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
-                    },
-                    credentials: 'same-origin'
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        // Update counts
-                        if (data.cart_total_items !== undefined) {
-                            const cartLink = document.querySelector('a[href*="cart_detail"]');
-                            if (cartLink) {
-                                cartLink.innerHTML = `<i class="fas fa-shopping-cart"></i> Cart <span class="cart-badge">${data.cart_total_items}</span>`;
-                            }
-                        }
-                        if (data.wishlist_total_items !== undefined) {
-                            const wishlistLink = document.querySelector('a[href*="wishlist_detail"]');
-                            if (wishlistLink) {
-                                wishlistLink.innerHTML = `<i class="fas fa-heart"></i> Wishlist <span class="cart-badge">${data.wishlist_total_items}</span>`;
-                            }
-                        }
-                        
-                        showAlert('success', data.message);
-                    } else {
-                        showAlert('warning', data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showAlert('danger', 'An error occurred while processing your request. Please try again.');
-                })
-                .finally(() => {
-                    button.disabled = false;
-                    button.innerHTML = originalText;
-                });
-            });
-        });
-
-        function showAlert(type, message) {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
-            alertDiv.innerHTML = `
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            
-            document.body.appendChild(alertDiv);
-            
-            // Auto remove after 5 seconds
-            setTimeout(() => {
-                if (alertDiv.parentNode) {
-                    alertDiv.remove();
-                }
-            }, 5000);
-        }
-    </script>
-</body>
-</html>
+{% endblock %}

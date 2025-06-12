@@ -17,14 +17,6 @@ class ProductFilter(django_filters.FilterSet):
         label='Search'
     )
     
-    # Category filter
-    category = django_filters.ModelChoiceFilter(
-        queryset=Category.objects.filter(is_active=True),
-        empty_label="All Categories",
-        widget=forms.Select(attrs={'class': 'form-select'}),
-        label='Category'
-    )
-    
     # Price range filters
     price_min = django_filters.NumberFilter(
         field_name='price',
@@ -90,4 +82,4 @@ class ProductFilter(django_filters.FilterSet):
 
     class Meta:
         model = Product
-        fields = ['search', 'category', 'price_min', 'price_max']
+        fields = ['search', 'price_min', 'price_max', 'sort_by']
