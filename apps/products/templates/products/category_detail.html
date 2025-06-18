@@ -35,6 +35,9 @@
 {% endblock %}
 
 {% block content %}
+    <!-- CSRF Token for AJAX requests -->
+    {% csrf_token %}
+    
     <!-- Category Header -->
     <div class="category-header">
         <div class="container">
@@ -76,44 +79,7 @@
         <div class="row">
             {% for product in products %}
             <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
-                <div class="card product-card">
-                    {% if product.get_main_image %}
-                    <img src="{{ product.get_main_image.url }}" class="card-img-top product-image" alt="{{ product.name }}">
-                    {% else %}
-                    <div class="card-img-top product-image bg-light d-flex align-items-center justify-content-center">
-                        <span class="text-muted">No Image</span>
-                    </div>
-                    {% endif %}
-                    
-                    <div class="card-body d-flex flex-column">
-                        <h6 class="card-title">{{ product.name }}</h6>
-                        <p class="text-muted small mb-2">Model: {{ product.model_number }}</p>
-                        
-                        {% if product.short_description %}
-                        <p class="card-text text-muted small">{{ product.short_description|truncatewords:12 }}</p>
-                        {% endif %}
-                        
-                        <!-- Quick specs -->
-                        {% if product.power or product.voltage %}
-                        <div class="mb-2">
-                            {% if product.power %}<small class="text-muted d-block">Power: {{ product.power }}</small>{% endif %}
-                            {% if product.voltage %}<small class="text-muted d-block">Voltage: {{ product.voltage }}</small>{% endif %}
-                        </div>
-                        {% endif %}
-                        
-                        <div class="mt-auto">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <span class="price-tag">{{ product.formatted_price }}</span>
-                                {% if product.is_available %}
-                                <span class="badge bg-success">In Stock</span>
-                                {% else %}
-                                <span class="badge bg-danger">Out of Stock</span>
-                                {% endif %}
-                            </div>
-                            <a href="{% url 'products:product_detail' product.slug %}" class="btn btn-primary w-100">View Details</a>
-                        </div>
-                    </div>
-                </div>
+                {% include 'products/includes/product_card.html' %}
             </div>
             {% endfor %}
         </div>
@@ -129,4 +95,253 @@
             <a href="{% url 'products:product_list' %}" class="btn btn-outline-primary">← Back to All Products</a>
         </div>
     </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add to Cart functionality
+    document.querySelectorAll('.add-to-cart').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            const productName = this.dataset.productName;
+            
+            // Create form data
+            const formData = new FormData();
+            formData.append('quantity', '1');
+            
+            fetch(`/cart/add/${productId}/`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Update cart badge
+                    const cartBadge = document.querySelector('.cart-badge');
+                    if (cartBadge) {
+                        cartBadge.textContent = data.cart_total_items;
+                    }
+                    
+                    // Show success message
+                    showNotification('Success!', data.message, 'success');
+                } else {
+                    showNotification('Error!', data.message || 'Failed to add to cart.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error!', 'Failed to add to cart.', 'error');
+            });
+        });
+    });
+
+    // Add to Wishlist functionality
+    document.querySelectorAll('.add-to-wishlist-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const button = this.querySelector('button[type="submit"]');
+            const originalText = button.innerHTML;
+            const productId = button.dataset.productId;
+            const productName = button.dataset.productName;
+            
+            // Disable button and show loading state
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Adding...';
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Update wishlist badge
+                    const wishlistBadge = document.querySelector('.wishlist-badge');
+                    if (wishlistBadge) {
+                        wishlistBadge.textContent = data.wishlist_total_items;
+                    }
+                    
+                    // Update button state to "In Wishlist"
+                    updateWishlistButtonState(button, true, productId, productName);
+                    
+                    // Show success message
+                    showNotification('Success!', data.message, 'success');
+                } else {
+                    showNotification('Info', data.message, 'info');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error!', 'Failed to add to wishlist. Please try again.', 'error');
+            })
+            .finally(() => {
+                // Re-enable button and restore original text if not successful
+                if (!data || !data.success) {
+                    button.disabled = false;
+                    button.innerHTML = originalText;
+                }
+            });
+        });
+    });
+
+    // Handle "In Wishlist" button clicks (for removing from wishlist)
+    document.querySelectorAll('.wishlist-btn[data-in-wishlist="true"]').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            const productName = this.dataset.productName;
+            
+            // Create form data for removal
+            const formData = new FormData();
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+            
+            // Show loading state
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Removing...';
+            
+            fetch(`/cart/wishlist/remove/${productId}/`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Update wishlist badge
+                    const wishlistBadge = document.querySelector('.wishlist-badge');
+                    if (wishlistBadge) {
+                        wishlistBadge.textContent = data.wishlist_total_items;
+                    }
+                    
+                    // Update button state to "Add to Wishlist"
+                    updateWishlistButtonState(this, false, productId, productName);
+                    
+                    // Show success message
+                    showNotification('Success!', data.message, 'success');
+                } else {
+                    showNotification('Info', data.message, 'info');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error!', 'Failed to remove from wishlist. Please try again.', 'error');
+            })
+            .finally(() => {
+                // Re-enable button if not successful
+                if (!data || !data.success) {
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-heart me-2"></i>In Wishlist';
+                }
+            });
+        });
+    });
+
+    // Function to update wishlist button state
+    function updateWishlistButtonState(button, inWishlist, productId, productName) {
+        if (inWishlist) {
+            // Change to "In Wishlist" state
+            button.className = 'btn btn-danger w-100 wishlist-btn';
+            button.dataset.inWishlist = 'true';
+            button.innerHTML = '<i class="fas fa-heart me-2"></i>In Wishlist';
+            button.disabled = false;
+            
+            // Remove form wrapper and add click handler
+            const form = button.closest('form');
+            if (form) {
+                form.remove();
+            }
+            
+            // Add click handler for removal
+            button.addEventListener('click', function() {
+                // This will be handled by the existing click handler above
+            });
+        } else {
+            // Change to "Add to Wishlist" state
+            button.className = 'btn btn-outline-danger w-100 wishlist-btn';
+            button.dataset.inWishlist = 'false';
+            button.innerHTML = '<i class="fas fa-heart me-2"></i>Add to Wishlist';
+            button.disabled = false;
+            
+            // Wrap in form for adding
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/cart/wishlist/add/${productId}/`;
+            form.className = 'add-to-wishlist-form';
+            
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = 'csrfmiddlewaretoken';
+            csrfToken.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            form.appendChild(csrfToken);
+            form.appendChild(button);
+            
+            // Replace the button with the form
+            button.parentNode.insertBefore(form, button);
+            button.parentNode.removeChild(button);
+        }
+    }
+
+    // Notification function
+    function showNotification(title, message, type) {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type === 'success' ? 'success' : type === 'info' ? 'info' : 'danger'} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        notification.innerHTML = `
+            <strong>${title}</strong> ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        // Add to page
+        document.body.appendChild(notification);
+        
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 3000);
+    }
+
+    // Product card click functionality
+    document.querySelectorAll('.product-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+            // Don't navigate if clicking on buttons or forms
+            if (e.target.closest('button') || e.target.closest('form') || e.target.closest('input')) {
+                return;
+            }
+            
+            // Navigate to product detail page
+            const productUrl = this.dataset.productUrl;
+            if (productUrl) {
+                window.location.href = productUrl;
+            }
+        });
+    });
+</script>
 {% endblock %}

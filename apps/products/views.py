@@ -4,7 +4,7 @@ from django.db.models import Q, Count
 from django_filters.views import FilterView
 from .models import Product, Category
 from .filters import ProductFilter
-from apps.cart.views import get_cart_count, get_wishlist_count, get_or_create_compare_list
+from apps.cart.views import get_cart_count, get_wishlist_count, get_or_create_compare_list, get_or_create_wishlist
 
 
 class ProductListView(FilterView):
@@ -25,6 +25,7 @@ class ProductListView(FilterView):
         print(f"Debug - Active products: {active_queryset.count()}")
         
         return active_queryset
+        
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -41,6 +42,13 @@ class ProductListView(FilterView):
         context['cart_total_items'] = get_cart_count(self.request)
         context['wishlist_total_items'] = get_wishlist_count(self.request)
         context['compare_total_items'] = get_or_create_compare_list(self.request).items.count()
+        context['wishlist'] = get_or_create_wishlist(self.request)
+        
+        # Add compare items for button state
+        compare_list = get_or_create_compare_list(self.request)
+        context['compare_items'] = compare_list.items.all()
+        context['compare_product_ids'] = list(compare_list.items.values_list('product_id', flat=True))
+        
         return context
 
 
@@ -85,6 +93,7 @@ class CategoryDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['products'] = self.object.products.filter(is_active=True).prefetch_related('images')
+        context['wishlist'] = get_or_create_wishlist(self.request)
         return context
 
 
@@ -120,5 +129,6 @@ def home_view(request):
         'featured_products': Product.objects.filter(is_active=True, is_featured=True)[:8],
         'categories': Category.objects.filter(is_active=True)[:6],
         'latest_products': Product.objects.filter(is_active=True).order_by('-created_at')[:8],
+        'wishlist': get_or_create_wishlist(request),
     }
     return render(request, 'home.html', context)

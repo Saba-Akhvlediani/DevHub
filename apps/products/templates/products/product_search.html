@@ -100,7 +100,7 @@
             <div class="row">
                 {% for product in products %}
                 <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
-                    <div class="card product-card">
+                    <div class="card product-card" style="cursor: pointer;" data-product-url="{% url 'products:product_detail' product.slug %}">
                         {% if product.get_main_image %}
                         <img src="{{ product.get_main_image.url }}" class="card-img-top product-image" alt="{{ product.name }}">
                         {% else %}
@@ -135,7 +135,6 @@
                                     <span class="badge bg-danger">Out of Stock</span>
                                     {% endif %}
                                 </div>
-                                <a href="{% url 'products:product_detail' product.slug %}" class="btn btn-primary w-100">View Details</a>
                             </div>
                         </div>
                     </div>
@@ -220,5 +219,23 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Product card click functionality
+        document.querySelectorAll('.product-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                // Don't navigate if clicking on buttons or forms
+                if (e.target.closest('button') || e.target.closest('form') || e.target.closest('input')) {
+                    return;
+                }
+                
+                // Navigate to product detail page
+                const productUrl = this.dataset.productUrl;
+                if (productUrl) {
+                    window.location.href = productUrl;
+                }
+            });
+        });
+    </script>
 </body>
 </html>

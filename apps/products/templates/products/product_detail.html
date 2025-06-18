@@ -201,7 +201,7 @@
                             <div class="row">
                                 {% for related_product in related_products %}
                                 <div class="col-md-6 col-lg-4 mb-4">
-                                    <div class="card related-product-card h-100">
+                                    <div class="card related-product-card h-100" style="cursor: pointer;" data-product-url="{% url 'products:product_detail' related_product.slug %}">
                                         {% if related_product.get_main_image %}
                                         <img src="{{ related_product.get_main_image.url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ related_product.name }}">
                                         {% else %}
@@ -213,7 +213,6 @@
                                             <h6 class="card-title">{{ related_product.name }}</h6>
                                             <p class="text-muted small">{{ related_product.model_number }}</p>
                                             <p class="text-primary fw-bold mt-auto">{{ related_product.formatted_price }}</p>
-                                            <a href="{% url 'products:product_detail' related_product.slug %}" class="btn btn-primary">View Details</a>
                                         </div>
                                     </div>
                                 </div>
@@ -226,4 +225,150 @@
             </div>
         </div>
     </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add to Cart functionality
+    document.querySelectorAll('.add-to-cart-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const button = this.querySelector('button[type="submit"]');
+            const originalText = button.innerHTML;
+            
+            // Disable button and show loading state
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Adding...';
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Update cart badge
+                    const cartBadge = document.querySelector('.cart-badge');
+                    if (cartBadge) {
+                        cartBadge.textContent = data.cart_total_items;
+                    }
+                    
+                    // Show success message
+                    showNotification('Success!', data.message, 'success');
+                } else {
+                    showNotification('Error!', data.message || 'Failed to add to cart.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error!', 'Failed to add to cart. Please try again.', 'error');
+            })
+            .finally(() => {
+                // Re-enable button and restore original text
+                button.disabled = false;
+                button.innerHTML = originalText;
+            });
+        });
+    });
+
+    // Add to Wishlist functionality
+    document.querySelectorAll('.add-to-wishlist-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const button = this.querySelector('button[type="submit"]');
+            const originalText = button.innerHTML;
+            
+            // Disable button and show loading state
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Adding...';
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Update wishlist badge
+                    const wishlistBadge = document.querySelector('.wishlist-badge');
+                    if (wishlistBadge) {
+                        wishlistBadge.textContent = data.wishlist_total_items;
+                    }
+                    
+                    // Show success message
+                    showNotification('Success!', data.message, 'success');
+                } else {
+                    showNotification('Info', data.message, 'info');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error!', 'Failed to add to wishlist. Please try again.', 'error');
+            })
+            .finally(() => {
+                // Re-enable button and restore original text
+                button.disabled = false;
+                button.innerHTML = originalText;
+            });
+        });
+    });
+
+    // Notification function
+    function showNotification(title, message, type) {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type === 'success' ? 'success' : type === 'info' ? 'info' : 'danger'} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        notification.innerHTML = `
+            <strong>${title}</strong> ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        // Add to page
+        document.body.appendChild(notification);
+        
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 3000);
+    }
+
+    // Related product card click functionality
+    document.querySelectorAll('.related-product-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+            // Don't navigate if clicking on buttons or forms
+            if (e.target.closest('button') || e.target.closest('form') || e.target.closest('input')) {
+                return;
+            }
+            
+            // Navigate to product detail page
+            const productUrl = this.dataset.productUrl;
+            if (productUrl) {
+                window.location.href = productUrl;
+            }
+        });
+    });
+</script>
 {% endblock %}

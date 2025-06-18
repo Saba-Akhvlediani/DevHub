@@ -1,123 +1,94 @@
-<!DOCTYPE html>
-{% load static %}
-{% load cart_tags %}
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Comparison - Georgian Equipment</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .compare-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-        }
-        .compare-table th {
-            background: #f8f9fa;
-            position: sticky;
-            left: 0;
-            z-index: 1;
-            min-width: 200px;
-            padding: 1rem;
-        }
-        .compare-table td {
-            min-width: 250px;
-            padding: 1rem;
-            border-bottom: 1px solid #dee2e6;
-        }
-        .compare-table tr:nth-child(even) {
-            background-color: #f8f9fa;
-        }
-        .different-value {
-            background-color: #fff3cd;
-        }
-        .product-image {
-            max-width: 200px;
-            height: auto;
-            margin-bottom: 1rem;
-        }
-        .remove-btn {
-            position: absolute;
-            top: 0;
-            right: 0;
-            padding: 0.5rem;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 0 0 0 0.5rem;
-        }
-        .sidebar {
-            background: #f8f9fa;
-            padding: 20px;
-            border-right: 1px solid #dee2e6;
-            height: calc(100vh - 72px); /* Adjust based on navbar height */
-            position: sticky;
-            top: 72px;
-            overflow-y: auto;
-        }
-        .sidebar-heading {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #dee2e6;
-        }
-        .sort-option {
-            cursor: pointer;
-            padding: 0.5rem;
-            margin-bottom: 0.5rem;
-            border-radius: 4px;
-            transition: background-color 0.2s;
-        }
-        .sort-option:hover {
-            background-color: #e9ecef;
-        }
-        .sort-option.active {
-            background-color: #e9ecef;
-            font-weight: 600;
-        }
-        .main-content {
-            padding: 20px;
-        }
-        @media (max-width: 768px) {
-            .sidebar {
-                height: auto;
-                position: relative;
-                top: 0;
-                margin-bottom: 1rem;
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold text-primary" href="{% url 'home' %}">Georgian Equipment</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'home' %}">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'products:product_list' %}">All Products</a>
-                    </li>
-                </ul>
-                <div class="d-flex">
-                    <a href="{% url 'cart:cart_detail' %}" class="btn btn-outline-primary me-2">
-                        <i class="fas fa-shopping-cart"></i> Cart
-                    </a>
-                    <a href="{% url 'cart:wishlist_detail' %}" class="btn btn-outline-secondary me-2">
-                        <i class="fas fa-heart"></i> Wishlist
-                    </a>
-                </div>
-            </div>
-        </div>
-    </nav>
+{% extends 'base.html' %}
 
+{% block title %}Product Comparison - Georgian Equipment{% endblock %}
+
+{% block extra_css %}
+<style>
+    .compare-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    .compare-table th {
+        background: #f8f9fa;
+        position: sticky;
+        left: 0;
+        z-index: 1;
+        min-width: 200px;
+        padding: 1rem;
+    }
+    .compare-table td {
+        min-width: 250px;
+        padding: 1rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .compare-table tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+    .different-value {
+        background-color: #fff3cd;
+    }
+    .product-image {
+        max-width: 200px;
+        height: auto;
+        margin-bottom: 1rem;
+    }
+    .remove-btn {
+        position: absolute;
+        top: 0;
+        right: 0;
+        padding: 0.5rem;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 0 0 0 0.5rem;
+    }
+    .sidebar {
+        background: #f8f9fa;
+        padding: 20px;
+        border-right: 1px solid #dee2e6;
+        height: calc(100vh - 72px); /* Adjust based on navbar height */
+        position: sticky;
+        top: 72px;
+        overflow-y: auto;
+    }
+    .sidebar-heading {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #dee2e6;
+    }
+    .sort-option {
+        cursor: pointer;
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+    }
+    .sort-option:hover {
+        background-color: #e9ecef;
+    }
+    .sort-option.active {
+        background-color: #e9ecef;
+        font-weight: 600;
+    }
+    .main-content {
+        padding: 20px;
+    }
+    @media (max-width: 768px) {
+        .sidebar {
+            height: auto;
+            position: relative;
+            top: 0;
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <!-- CSRF Token for AJAX requests -->
+    {% csrf_token %}
+    
     <!-- Main Content with Sidebar -->
     <div class="container-fluid">
         <div class="row">
@@ -198,41 +169,34 @@
                                         </div>
                                         
                                         {% if item.product.is_available %}
-                                        <form method="POST" action="{% url 'cart:add_to_cart' item.product.id %}" class="add-to-cart-form mb-2">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-primary btn-sm">
-                                                <i class="fas fa-cart-plus me-1"></i>Add to Cart
-                                            </button>
-                                        </form>
+                                        <span class="badge bg-success">In Stock</span>
                                         {% else %}
-                                        <button class="btn btn-secondary btn-sm" disabled>Out of Stock</button>
+                                        <span class="badge bg-danger">Out of Stock</span>
                                         {% endif %}
                                     </td>
                                     {% endfor %}
                                 </tr>
 
-                                <!-- Basic Information -->
-                                <tr class="category-row">
-                                    <th>Category</th>
-                                    {% for item in compare_items %}
-                                    <td>{{ item.product.category.name }}</td>
-                                    {% endfor %}
-                                </tr>
-
                                 <!-- Specifications -->
-                                {% for spec in spec_keys %}
-                                <tr class="spec-row" data-spec="{{ spec|slugify }}">
-                                    <th>{{ spec }}</th>
+                                {% for spec_key in spec_keys %}
+                                <tr class="spec-row" data-spec="{{ spec_key|slugify }}">
+                                    <th>{{ spec_key }}</th>
                                     {% for item in compare_items %}
-                                    <td class="{% if forloop.counter > 1 %}{% with prev=compare_items|index:forloop.counter0|add:"-1" %}{% if item.product|get_spec:spec != prev.product|get_spec:spec %}different-value{% endif %}{% endwith %}{% endif %}">
-                                        {{ item.product|get_spec:spec|default:"-" }}
+                                    <td class="spec-value" data-product="{{ item.product.id }}" data-spec="{{ spec_key|slugify }}">
+                                        {% for spec in item.product.specifications.all %}
+                                            {% if spec.name == spec_key %}
+                                                {{ spec.value }}
+                                            {% endif %}
+                                        {% empty %}
+                                            <span class="text-muted">-</span>
+                                        {% endfor %}
                                     </td>
                                     {% endfor %}
                                 </tr>
                                 {% endfor %}
                             </table>
                         </div>
-
+                        
                         <!-- Action Buttons -->
                         <div class="mt-4 d-flex justify-content-between">
                             <a href="{% url 'products:product_list' %}" class="btn btn-outline-primary">
@@ -246,13 +210,12 @@
                             </form>
                         </div>
                     {% else %}
-                        <!-- Empty State -->
                         <div class="text-center py-5">
-                            <i class="fas fa-exchange-alt fa-4x text-muted mb-4"></i>
-                            <h4 class="text-muted mb-3">No products to compare</h4>
-                            <p class="text-muted mb-4">Add products to compare their specifications side by side.</p>
+                            <i class="fas fa-balance-scale fa-4x text-muted mb-3"></i>
+                            <h4 class="text-muted">No Products to Compare</h4>
+                            <p class="text-muted">Add products to your comparison list to see them side by side.</p>
                             <a href="{% url 'products:product_list' %}" class="btn btn-primary">
-                                <i class="fas fa-search me-2"></i>Browse Products
+                                <i class="fas fa-shopping-bag me-2"></i>Browse Products
                             </a>
                         </div>
                     {% endif %}
@@ -260,145 +223,202 @@
             </div>
         </div>
     </div>
+{% endblock %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Handle AJAX form submissions
-            document.querySelectorAll('.add-to-cart-form, .remove-from-compare-form, .clear-compare-form').forEach(form => {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    const formData = new FormData(this);
-                    const button = this.querySelector('button[type="submit"]');
-                    const originalText = button.innerHTML;
-                    
-                    button.disabled = true;
-                    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-                    
-                    fetch(this.action, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
-                        },
-                        credentials: 'same-origin'
-                    })
-                    .then(response => {
-                        if (!response.ok) throw new Error('Network response was not ok');
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data.success) {
-                            if (this.classList.contains('remove-from-compare-form') || this.classList.contains('clear-compare-form')) {
-                                window.location.reload();
-                            } else {
-                                showAlert('success', data.message);
-                                if (data.cart_total_items !== undefined) {
-                                    const cartLink = document.querySelector('a[href*="cart_detail"]');
-                                    if (cartLink) {
-                                        cartLink.innerHTML = `<i class="fas fa-shopping-cart"></i> Cart (${data.cart_total_items})`;
-                                    }
-                                }
-                            }
-                        } else {
-                            showAlert('warning', data.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        showAlert('danger', 'An error occurred. Please try again.');
-                    })
-                    .finally(() => {
-                        if (!this.classList.contains('remove-from-compare-form') && !this.classList.contains('clear-compare-form')) {
-                            button.disabled = false;
-                            button.innerHTML = originalText;
-                        }
-                    });
-                });
-            });
+{% block extra_js %}
+<script>
+    // Sort functionality
+    document.querySelectorAll('.sort-option').forEach(option => {
+        option.addEventListener('click', function() {
+            // Remove active class from all options
+            document.querySelectorAll('.sort-option').forEach(opt => opt.classList.remove('active'));
+            // Add active class to clicked option
+            this.classList.add('active');
+            
+            const sortType = this.dataset.sort;
+            sortTable(sortType);
+        });
+    });
 
-            // Sort functionality
-            const compareTable = document.getElementById('compareTable');
-            document.querySelectorAll('.sort-option').forEach(option => {
-                option.addEventListener('click', function() {
-                    const sortType = this.dataset.sort;
-                    
-                    // Update active state
-                    document.querySelectorAll('.sort-option').forEach(opt => opt.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    // Get all product columns (skip the first header column)
-                    const products = Array.from(compareTable.querySelectorAll('.product-row td')).map((td, index) => ({
-                        element: td,
-                        name: td.querySelector('h5').textContent,
-                        price: parseFloat(td.querySelector('.product-price').textContent.replace(/[^0-9.-]+/g, '')),
-                        index: index
-                    }));
-                    
-                    // Sort products
-                    products.sort((a, b) => {
-                        switch(sortType) {
-                            case 'name':
-                                return a.name.localeCompare(b.name);
-                            case 'price-asc':
-                                return a.price - b.price;
-                            case 'price-desc':
-                                return b.price - a.price;
-                            default:
-                                return 0;
-                        }
-                    });
-                    
-                    // Reorder all rows
-                    const rows = compareTable.querySelectorAll('tr');
-                    rows.forEach(row => {
-                        const cells = Array.from(row.children);
-                        const header = cells.shift(); // Remove and keep the header cell
-                        
-                        // Reorder the remaining cells according to the sort
-                        products.forEach(product => {
-                            row.appendChild(cells[product.index]);
-                        });
-                        
-                        // Put the header back at the start
-                        row.insertBefore(header, row.firstChild);
-                    });
-                });
-            });
-
-            // Specification visibility toggle
-            document.querySelectorAll('.spec-filter').forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    const specName = this.dataset.spec;
-                    const rows = document.querySelectorAll(`.spec-row[data-spec="${specName}"]`);
-                    rows.forEach(row => {
-                        row.style.display = this.checked ? '' : 'none';
-                    });
-                });
-            });
-
-            // Differences highlight toggle
-            document.getElementById('showDifferences').addEventListener('change', function() {
-                const differentValues = document.querySelectorAll('.different-value');
-                differentValues.forEach(cell => {
-                    cell.style.backgroundColor = this.checked ? '#fff3cd' : 'transparent';
-                });
+    // Filter specifications
+    document.querySelectorAll('.spec-filter').forEach(filter => {
+        filter.addEventListener('change', function() {
+            const specKey = this.dataset.spec;
+            const isChecked = this.checked;
+            
+            const specRows = document.querySelectorAll(`.spec-row[data-spec="${specKey}"]`);
+            specRows.forEach(row => {
+                row.style.display = isChecked ? 'table-row' : 'none';
             });
         });
+    });
 
-        function showAlert(type, message) {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
-            alertDiv.style.zIndex = '1050';
-            alertDiv.innerHTML = `
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            document.body.appendChild(alertDiv);
-            setTimeout(() => alertDiv.remove(), 5000);
-        }
-    </script>
-</body>
-</html> 
+    // Show differences toggle
+    document.getElementById('showDifferences').addEventListener('change', function() {
+        const showDiff = this.checked;
+        highlightDifferences(showDiff);
+    });
+
+    // Remove from compare functionality
+    document.querySelectorAll('.remove-from-compare-form, .clear-compare-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const button = this.querySelector('button[type="submit"]');
+            const originalText = button.innerHTML;
+            
+            // Show loading state
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Reload page to update comparison
+                    window.location.reload();
+                } else {
+                    showNotification('Error!', data.message || 'Failed to remove from comparison.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error!', 'Failed to remove from comparison. Please try again.', 'error');
+            })
+            .finally(() => {
+                // Re-enable button if not successful
+                button.disabled = false;
+                button.innerHTML = originalText;
+            });
+        });
+    });
+
+    // Sort table function
+    function sortTable(sortType) {
+        const table = document.getElementById('compareTable');
+        const productRow = table.querySelector('.product-row');
+        const specRows = table.querySelectorAll('.spec-row');
+        
+        if (!productRow) return;
+        
+        // Get all product columns (excluding the first header column)
+        const productColumns = Array.from(productRow.querySelectorAll('td'));
+        
+        // Create array of product data for sorting
+        const productData = productColumns.map((column, index) => {
+            const productName = column.querySelector('h5')?.textContent.trim() || '';
+            const priceElement = column.querySelector('.product-price');
+            const priceText = priceElement?.textContent.trim() || '';
+            const price = parseFloat(priceText.replace(/[^\d.]/g, '')) || 0;
+            
+            return {
+                index: index,
+                column: column,
+                name: productName,
+                price: price
+            };
+        });
+        
+        // Sort product data based on sort type
+        productData.sort((a, b) => {
+            switch(sortType) {
+                case 'name':
+                    return a.name.localeCompare(b.name);
+                case 'price-asc':
+                    return a.price - b.price;
+                case 'price-desc':
+                    return b.price - a.price;
+                default:
+                    return 0;
+            }
+        });
+        
+        // Get the sorted column order
+        const sortedColumnOrder = productData.map(item => item.index);
+        
+        // Reorder columns in the product row
+        reorderColumns(productRow, sortedColumnOrder);
+        
+        // Reorder columns in all specification rows
+        specRows.forEach(row => {
+            reorderColumns(row, sortedColumnOrder);
+        });
+    }
+    
+    // Helper function to reorder columns
+    function reorderColumns(row, columnOrder) {
+        const cells = Array.from(row.querySelectorAll('td'));
+        const headerCell = row.querySelector('th');
+        
+        // Remove all cells
+        cells.forEach(cell => cell.remove());
+        
+        // Re-add cells in the new order
+        columnOrder.forEach(index => {
+            row.appendChild(cells[index]);
+        });
+    }
+
+    // Highlight differences function
+    function highlightDifferences(showDiff) {
+        const specRows = document.querySelectorAll('.spec-row');
+        
+        specRows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            const values = Array.from(cells).map(cell => cell.textContent.trim());
+            const uniqueValues = [...new Set(values.filter(v => v !== '-'))];
+            
+            if (showDiff && uniqueValues.length > 1) {
+                cells.forEach(cell => {
+                    if (cell.textContent.trim() !== '-') {
+                        cell.classList.add('different-value');
+                    }
+                });
+            } else {
+                cells.forEach(cell => {
+                    cell.classList.remove('different-value');
+                });
+            }
+        });
+    }
+
+    // Notification function
+    function showNotification(title, message, type) {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type === 'success' ? 'success' : type === 'info' ? 'info' : 'danger'} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        notification.innerHTML = `
+            <strong>${title}</strong> ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        // Add to page
+        document.body.appendChild(notification);
+        
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 3000);
+    }
+
+    // Initialize highlighting on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        highlightDifferences(true);
+    });
+</script>
+{% endblock %} 

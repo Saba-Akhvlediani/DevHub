@@ -4,20 +4,130 @@
 
 {% block extra_css %}
 <style>
-    .product-card {
-        transition: transform 0.3s;
-        border: none;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        height: 100%;
-    }
+    /* Product Card Hover Effects */
     .product-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
     }
+
+    /* Show hover actions on card hover */
+    .product-card:hover .hover-actions {
+        opacity: 1;
+        transform: translateX(0);
+        pointer-events: all;
+    }
+
+    /* Action buttons hover effects */
+    .action-btn {
+        transition: all 0.3s ease;
+    }
+
+    /* Wishlist button hover effect */
+    .add-to-wishlist-form .action-btn:hover {
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        transform: scale(1.1);
+    }
+
+    .add-to-wishlist-form .action-btn:hover i {
+        color: white !important;
+    }
+
+    /* Compare button hover effect */
+    .add-to-compare-form .action-btn:hover {
+        background-color: #007bff !important;
+        border-color: #007bff !important;
+        transform: scale(1.1);
+    }
+
+    .add-to-compare-form .action-btn:hover i {
+        color: white !important;
+    }
+
+    /* Quick view button hover effect */
+    .quick-view-btn:hover {
+        background-color: #6c757d !important;
+        border-color: #6c757d !important;
+        transform: scale(1.1);
+    }
+
+    .quick-view-btn:hover i {
+        color: white !important;
+    }
+
+    /* Shop button hover effect */
+    .shop-button .btn:hover {
+        transform: scale(1.1);
+        transition: transform 0.3s ease;
+    }
+
+    /* Center icons in shop buttons */
+    .shop-button .btn {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+    }
+
+    /* Center icons in all action buttons (hover actions) */
+    .action-btn {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+    }
+
+    /* Center icons in search button */
+    #floating-search .btn {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+    }
+
+    /* Product image hover effect */
     .product-image {
         height: 200px;
         object-fit: cover;
+        transition: transform 0.3s ease;
     }
+
+    .product-card:hover .product-image {
+        transform: scale(1.05);
+    }
+
+    /* Ensure proper z-index layering */
+    .position-absolute {
+        z-index: 10;
+    }
+
+    .hover-actions {
+        z-index: 20;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .hover-actions {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: all;
+        }
+        
+        .action-btn {
+            width: 35px !important;
+            height: 35px !important;
+        }
+        
+        .shop-button .btn {
+            width: 40px !important;
+            height: 40px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0 !important;
+        }
+    }
+
     .filter-sidebar {
         background: #f8f9fa;
         border-radius: 10px;
@@ -111,6 +221,15 @@
         border-color: #007bff;
         box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
     }
+
+    /* Hide star ratings completely */
+    .text-warning .far.fa-star,
+    .text-warning .fas.fa-star {
+        display: none !important;
+    }
+    
+    /* Remove the problematic rule that was hiding prices */
+    /* Price sections should now be visible by default */
 </style>
 {% endblock %}
 
@@ -176,6 +295,22 @@
                         </div>
                         {% endif %}
 
+                        <!-- Category Filter -->
+                        {% if categories %}
+                        <div class="filter-section">
+                            <label class="form-label fw-bold">Category</label>
+                            <select name="category" class="form-select">
+                                <option value="">All Categories</option>
+                                {% for category in categories %}
+                                <option value="{{ category.slug }}" 
+                                        {% if request.GET.category == category.slug %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% endif %}
+
                         <!-- Availability Filter -->
                         <div class="filter-section">
                             <label class="form-label fw-bold">Availability</label>
@@ -207,7 +342,7 @@
 
             <!-- Products Grid -->
             <div class="col-lg-9">
-                <!-- Header with Search and Results Count -->
+                <!-- Header with Results Count and Sort -->
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
                         <h2 class="mb-1">
@@ -222,7 +357,7 @@
                         </p>
                     </div>
                     
-                    <div class="d-flex gap-3">
+                    <div class="d-flex gap-3 align-items-center">
                         <!-- Sort Dropdown -->
                         <form method="GET" class="d-flex align-items-center sort-dropdown">
                             <!-- Preserve existing filters -->
@@ -254,22 +389,20 @@
                             </select>
                         </form>
                         
-                        <!-- Search Form -->
-                        <form class="d-flex" method="GET">
-                            <input class="form-control me-2" 
-                                   type="search" 
-                                   name="search" 
-                                   placeholder="Search products..." 
-                                   value="{{ request.GET.search }}">
-                            <button class="btn btn-outline-primary" type="submit">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </form>
+                        <!-- Compare Button -->
+                        <a href="{% url 'cart:compare_detail' %}" class="btn btn-primary position-relative">
+                            <i class="fas fa-exchange-alt me-2"></i>Compare
+                            {% if compare_total_items > 0 %}
+                                <span class="badge bg-white text-primary ms-1">
+                                    {{ compare_total_items }}
+                                </span>
+                            {% endif %}
+                        </a>
                     </div>
                 </div>
 
                 <!-- Active Filters Display -->
-                {% if request.GET.price_min or request.GET.price_max or request.GET.brand or request.GET.in_stock or request.GET.sort_by %}
+                {% if request.GET.price_min or request.GET.price_max or request.GET.brand or request.GET.in_stock or request.GET.sort_by or request.GET.category %}
                 <div class="alert alert-info d-flex align-items-center mb-4">
                     <i class="fas fa-info-circle me-2"></i>
                     <div>
@@ -283,6 +416,16 @@
                         {% endif %}
                         {% if request.GET.brand %}
                             <span class="badge bg-primary me-1">Brand: {{ request.GET.brand }}</span>
+                        {% endif %}
+                        {% if request.GET.category %}
+                            <span class="badge bg-primary me-1">
+                                Category: 
+                                {% for category in categories %}
+                                    {% if category.slug == request.GET.category %}
+                                        {{ category.name }}
+                                    {% endif %}
+                                {% endfor %}
+                            </span>
                         {% endif %}
                         {% if request.GET.in_stock %}
                             <span class="badge bg-primary me-1">In Stock Only</span>
@@ -311,54 +454,7 @@
                 <div class="row">
                     {% for product in products %}
                     <div class="col-md-6 col-lg-4 mb-4">
-                        <div class="card product-card">
-                            {% if product.get_main_image %}
-                            <img src="{{ product.get_main_image.url }}" class="card-img-top product-image" alt="{{ product.name }}">
-                            {% else %}
-                            <div class="card-img-top product-image bg-light d-flex align-items-center justify-content-center">
-                                <i class="fas fa-image fa-3x text-muted"></i>
-                            </div>
-                            {% endif %}
-                            
-                            <div class="card-body d-flex flex-column">
-                                <h6 class="card-title">{{ product.name }}</h6>
-                                <p class="text-muted small mb-2">{{ product.model_number }}</p>
-                                
-                                {% if product.description %}
-                                <p class="card-text small text-muted mb-3">{{ product.description|truncatewords:15 }}</p>
-                                {% endif %}
-                                
-                                <div class="mt-auto">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <span class="price-tag">{{ product.formatted_price }}</span>
-                                        {% if product.stock_quantity > 0 %}
-                                            <span class="badge bg-success">In Stock</span>
-                                        {% else %}
-                                            <span class="badge bg-danger">Out of Stock</span>
-                                        {% endif %}
-                                    </div>
-                                    
-                                    <div class="d-grid gap-2">
-                                        <a href="{% url 'products:product_detail' product.slug %}" class="btn btn-primary">
-                                            <i class="fas fa-eye me-2"></i>View Details
-                                        </a>
-                                        {% if product.stock_quantity > 0 %}
-                                        <button class="btn btn-outline-success add-to-cart" 
-                                                data-product-id="{{ product.id }}"
-                                                data-product-name="{{ product.name }}">
-                                            <i class="fas fa-shopping-cart me-2"></i>Add to Cart
-                                        </button>
-                                        {% endif %}
-                                        <form method="POST" action="{% url 'cart:add_to_wishlist' product.id %}" class="add-to-wishlist-form">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-outline-danger w-100">
-                                                <i class="fas fa-heart me-2"></i>Add to Wishlist
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        {% include 'products/includes/product_card.html' %}
                     </div>
                     {% endfor %}
                 </div>
@@ -412,34 +508,111 @@
             </div>
         </div>
     </div>
+
+    <!-- Floating Search Bar - Bottom Right -->
+    <div class="position-fixed" id="floating-search" style="bottom: 20px; right: 20px; z-index: 1000; transition: bottom 0.3s ease;">
+        <div class="card shadow-lg border-0" style="border-radius: 25px; min-width: 300px;">
+            <div class="card-body p-3">
+                <form method="GET" class="d-flex align-items-center">
+                    <!-- Preserve existing filters -->
+                    {% if request.GET.price_min %}
+                    <input type="hidden" name="price_min" value="{{ request.GET.price_min }}">
+                    {% endif %}
+                    {% if request.GET.price_max %}
+                    <input type="hidden" name="price_max" value="{{ request.GET.price_max }}">
+                    {% endif %}
+                    {% if request.GET.brand %}
+                    <input type="hidden" name="brand" value="{{ request.GET.brand }}">
+                    {% endif %}
+                    {% if request.GET.in_stock %}
+                    <input type="hidden" name="in_stock" value="{{ request.GET.in_stock }}">
+                    {% endif %}
+                    {% if request.GET.sort_by %}
+                    <input type="hidden" name="sort_by" value="{{ request.GET.sort_by }}">
+                    {% endif %}
+                    {% if request.GET.category %}
+                    <input type="hidden" name="category" value="{{ request.GET.category }}">
+                    {% endif %}
+                    
+                    <input class="form-control border-0 shadow-none" 
+                           type="search" 
+                           name="search" 
+                           placeholder="🔍 Search products..." 
+                           value="{{ request.GET.search }}"
+                           style="background: transparent;">
+                    <button class="btn btn-primary ms-2" type="submit" style="border-radius: 50%; width: 40px; height: 40px; padding: 0;">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Add to Cart functionality
-    document.querySelectorAll('.add-to-cart').forEach(button => {
-        button.addEventListener('click', function() {
-            const productId = this.dataset.productId;
-            const productName = this.dataset.productName;
+    // Enhanced hover effects with JavaScript
+    document.addEventListener('DOMContentLoaded', function() {
+        const productCards = document.querySelectorAll('.product-card');
+        
+        productCards.forEach(card => {
+            const hoverActions = card.querySelector('.hover-actions');
             
-            fetch(`/cart/add/${productId}/`, {
+            card.addEventListener('mouseenter', function() {
+                // Add a slight delay for smoother effect
+                setTimeout(() => {
+                    if (card.matches(':hover')) {
+                        hoverActions.style.opacity = '1';
+                        hoverActions.style.transform = 'translateX(0)';
+                        hoverActions.style.pointerEvents = 'all';
+                    }
+                }, 100);
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                hoverActions.style.opacity = '0';
+                hoverActions.style.transform = 'translateX(10px)';
+                hoverActions.style.pointerEvents = 'none';
+            });
+        });
+    });
+
+    // Add to Cart functionality
+    document.querySelectorAll('.add-to-cart-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const button = this.querySelector('button[type="submit"]');
+            const originalText = button.innerHTML;
+            
+            // Disable button and show loading state
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            fetch(this.action, {
                 method: 'POST',
+                body: formData,
                 headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
                 },
+                credentials: 'same-origin'
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     // Update cart badge
                     const cartBadge = document.querySelector('.cart-badge');
                     if (cartBadge) {
-                        cartBadge.textContent = data.cart_count;
+                        cartBadge.textContent = data.cart_total_items;
                     }
                     
                     // Show success message
-                    showNotification('Success!', `${productName} added to cart.`, 'success');
+                    showNotification('Success!', data.message, 'success');
                 } else {
                     showNotification('Error!', data.message || 'Failed to add to cart.', 'error');
                 }
@@ -447,6 +620,112 @@
             .catch(error => {
                 console.error('Error:', error);
                 showNotification('Error!', 'Failed to add to cart.', 'error');
+            })
+            .finally(() => {
+                button.disabled = false;
+                button.innerHTML = originalText;
+            });
+        });
+    });
+
+    // Add to Wishlist functionality
+    document.querySelectorAll('.add-to-wishlist-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const button = this.querySelector('button[type="submit"]');
+            const originalText = button.innerHTML;
+            
+            // Disable button and show loading state
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Update wishlist badge
+                    const wishlistBadge = document.querySelector('.wishlist-badge');
+                    if (wishlistBadge) {
+                        wishlistBadge.textContent = data.wishlist_total_items;
+                    }
+                    
+                    // Show success message
+                    showNotification('Success!', data.message, 'success');
+                } else {
+                    showNotification('Info', data.message, 'info');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error!', 'Failed to add to wishlist. Please try again.', 'error');
+            })
+            .finally(() => {
+                button.disabled = false;
+                button.innerHTML = originalText;
+            });
+        });
+    });
+
+    // Add to Compare functionality
+    document.querySelectorAll('.add-to-compare-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const button = this.querySelector('button[type="submit"]');
+            const originalText = button.innerHTML;
+            
+            // Disable button and show loading state
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Update compare badge
+                    const compareBadge = document.querySelector('.compare-badge');
+                    if (compareBadge) {
+                        compareBadge.textContent = data.compare_total_items;
+                    }
+                    
+                    // Show success message
+                    showNotification('Success!', data.message, 'success');
+                } else {
+                    showNotification('Info', data.message, 'info');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error!', 'Failed to add to compare. Please try again.', 'error');
+            })
+            .finally(() => {
+                button.disabled = false;
+                button.innerHTML = originalText;
             });
         });
     });
@@ -455,7 +734,7 @@
     function showNotification(title, message, type) {
         // Create notification element
         const notification = document.createElement('div');
-        notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+        notification.className = `alert alert-${type === 'success' ? 'success' : type === 'info' ? 'info' : 'danger'} alert-dismissible fade show position-fixed`;
         notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
         notification.innerHTML = `
             <strong>${title}</strong> ${message}
@@ -472,5 +751,41 @@
             }
         }, 3000);
     }
+
+    // Floating search bar scroll behavior
+    function handleFloatingSearchScroll() {
+        const floatingSearch = document.getElementById('floating-search');
+        const footer = document.querySelector('footer');
+        
+        if (!floatingSearch || !footer) return;
+        
+        const searchRect = floatingSearch.getBoundingClientRect();
+        const footerRect = footer.getBoundingClientRect();
+        const searchHeight = searchRect.height;
+        const footerTop = footerRect.top;
+        const windowHeight = window.innerHeight;
+        
+        // Calculate the minimum bottom position to keep search bar above footer
+        const minBottomPosition = windowHeight - footerTop + 20; // 20px buffer
+        
+        // If search bar would overlap with footer, adjust its position
+        if (footerTop < windowHeight && footerTop > 0) {
+            // Footer is visible, adjust search bar position
+            const newBottomPosition = Math.max(20, minBottomPosition);
+            floatingSearch.style.bottom = newBottomPosition + 'px';
+        } else if (footerTop <= 0) {
+            // Footer is above viewport, keep search bar at minimum position
+            floatingSearch.style.bottom = '20px';
+        } else {
+            // Footer is below viewport, allow normal positioning
+            floatingSearch.style.bottom = '20px';
+        }
+    }
+
+    // Add scroll event listener
+    window.addEventListener('scroll', handleFloatingSearchScroll);
+    
+    // Initial call to set correct position
+    document.addEventListener('DOMContentLoaded', handleFloatingSearchScroll);
 </script>
 {% endblock %}

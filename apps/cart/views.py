@@ -349,18 +349,18 @@ def move_to_cart_from_wishlist(request, product_id):
             # Remove from wishlist
             wishlist_item = wishlist.items.get(product=product)
             wishlist_item.delete()
-            
+    
             # Add to cart
             cart_item, created = CartItem.objects.get_or_create(
                 cart=cart,
                 product=product,
                 defaults={'quantity': 1}
             )
-            
+    
             if not created:
                 cart_item.quantity += 1
                 cart_item.save()
-            
+    
             message = f'Moved {product.name} to cart.'
             success = True
         except WishlistItem.DoesNotExist:
@@ -389,7 +389,7 @@ def move_to_cart_from_wishlist(request, product_id):
                 'message': 'An error occurred while moving item to cart. Please try again.'
             }, status=500)
         messages.error(request, 'An error occurred while moving item to cart. Please try again.')
-        return redirect('cart:wishlist_detail')
+    return redirect('cart:wishlist_detail')
 
 
 def get_cart_count(request):
