@@ -5,6 +5,7 @@ from django_filters.views import FilterView
 from .models import Product, Category
 from .filters import ProductFilter
 from apps.cart.views import get_cart_count, get_wishlist_count, get_or_create_compare_list, get_or_create_wishlist
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
 class ProductListView(FilterView):
@@ -82,18 +83,57 @@ class ProductDetailView(DetailView):
 
 
 class CategoryDetailView(DetailView):
-    """Display products in a specific category"""
+    """Display products in a specific category with pagination, filtering, sorting, and search"""
     model = Category
     template_name = 'products/category_detail.html'
     context_object_name = 'category'
+    paginate_by = 12
 
     def get_queryset(self):
         return Category.objects.filter(is_active=True)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['products'] = self.object.products.filter(is_active=True).prefetch_related('images')
-        context['wishlist'] = get_or_create_wishlist(self.request)
+        products = self.object.products.filter(is_active=True).prefetch_related('images')
+        request = self.request
+        get = request.GET
+
+        # Filtering
+        price_min = get.get('price_min')
+        price_max = get.get('price_max')
+        in_stock = get.get('in_stock')
+        search = get.get('search')
+        sort_by = get.get('sort_by')
+
+        if price_min:
+            products = products.filter(price__gte=price_min)
+        if price_max:
+            products = products.filter(price__lte=price_max)
+        if in_stock:
+            products = products.filter(is_in_stock=True)
+        if search:
+            products = products.filter(
+                Q(name__icontains=search) | Q(model_number__icontains=search)
+            )
+        if sort_by:
+            products = products.order_by(sort_by)
+        else:
+            products = products.order_by('-created_at')
+
+        # Pagination
+        paginator = Paginator(products, self.paginate_by)
+        page = request.GET.get('page')
+        try:
+            page_obj = paginator.page(page)
+        except PageNotAnInteger:
+            page_obj = paginator.page(1)
+        except EmptyPage:
+            page_obj = paginator.page(paginator.num_pages)
+        context['page_obj'] = page_obj
+        context['is_paginated'] = page_obj.has_other_pages()
+        context['paginator'] = paginator
+        context['products'] = page_obj.object_list
+        context['wishlist'] = get_or_create_wishlist(request)
         return context
 
 
